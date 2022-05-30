@@ -1,0 +1,9 @@
+---
+- name: cpu_limit
+  unit: m
+  query: 1000*max (kube_pod_container_resource_limits_cpu_cores{pod=~"$pod",namespace=~"$namespace",container=~"$container"})
+- name: mem_limit
+  unit: Mi
+  query: max (kube_pod_container_resource_limits_memory_bytes{pod=~"$pod",namespace=~"$namespace",container=~"$container"})/(1024*1024)
+- name: image_version
+  query: topk(1,kube_pod_container_info{pod=~"$pod",container=~"$container"})

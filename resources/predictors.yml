@@ -1,0 +1,64 @@
+---
+- name: kafka
+  vars:
+  - name: container
+    value: kafka
+  - name: namespace
+    value: ".*"
+  - name: pod
+    value: kafka-0
+  - name: node
+    value: ".*"
+  resources:
+  - name: cpu
+    predictors:
+    - name: Through_In
+      unit: MB/s
+      query: sum by (pod)(rate(kafka_server_brokertopicmetrics_bytesin_total{pod=~"$pod",
+        topic!=""}[$interval]))/(1024*1024)
+  - name: mem
+    predictors:
+    - name: Through_In
+      unit: MB/s
+      query: sum by (pod)(rate(kafka_server_brokertopicmetrics_bytesin_total{pod=~"$pod",
+        topic!=""}[$interval]))/(1024*1024)
+
+- name: node-exporter
+  vars:
+  - name: container
+    value: eaa-platform-node-exporter
+  - name: namespace
+    value: ".*"
+  - name: pod
+    value: ".*"
+  - name: node
+    value: ip-10-22-4-29.eu-west-1.compute.internal
+  resources:
+  - name: cpu
+    predictors:
+    - name: scraped_metrics
+      query: scrape_samples_scraped{job="kubernetes-node-exporter",instance="$node"}
+  - name: mem
+    predictors:
+    - name: scraped_metrics
+      query: scrape_samples_scraped{job="kubernetes-node-exporter",instance="$node"}
+
+- name: kubestate
+  vars:
+  - name: container
+    value: eaa-platform-kubestate-exporter
+  - name: namespace
+    value: ".*"
+  - name: pod
+    value: ".*"
+  - name: node
+    value: ".*"
+  resources:
+  - name: cpu
+    predictors:
+    - name: scraped_metrics
+      query: sum(scrape_samples_scraped{job="kube-state-metrics-exporter"})
+  - name: mem
+    predictors:
+    - name: scraped_metrics
+      query: sum(scrape_samples_scraped{job="kube-state-metrics-exporter"})
