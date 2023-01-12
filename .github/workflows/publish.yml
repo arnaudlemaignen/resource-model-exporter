@@ -19,5 +19,4 @@ jobs:
     - name: Build the Docker image
       run: |
         docker build . --tag ghcr.io/arnaudlemaignen/resource-model-exporter:latest
-        docker run ghcr.io/arnaudlemaignen/resource-model-exporter:latest
         docker push ghcr.io/arnaudlemaignen/resource-model-exporter:latest
