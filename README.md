@@ -35,39 +35,60 @@ The cherry on the cake is to visualize the delta between the model and the real 
 ## Configuration
 
 There are 3 config files :
-- predictors.json
+- predictors.yml
 In which you need to specify the dimensioning inputs that will be measured
 
-```{ "vars": [ {"name":"container","value":"eaa-platform-kubestate-exporter"},{"name":"namespace","value":".*"},{"name":"pod","value":".*"},{"name":"node","value":".*"} ],
-  "resources": [
-    {"name":"cpu","predictors":[	{"name":"scraped_metrics","query":"scrape_samples_scraped{job=\"kube-state-metrics-exporter\"}"}	]},
-    {"name":"mem","predictors":[	{"name":"scraped_metrics","query":"scrape_samples_scraped{job=\"kube-state-metrics-exporter\"}"}	]}	]
-}
+```
+- name: kubestate
+  vars:
+  - name: container
+    value: eaa-platform-kubestate-exporter
+  - name: namespace
+    value: ".*"
+  - name: pod
+    value: ".*"
+  - name: node
+    value: ".*"
+  resources:
+  - name: cpu
+    predictors:
+    - name: scraped_metrics
+      query: sum(scrape_samples_scraped{job="kube-state-metrics-exporter"})
+  - name: mem
+    predictors:
+    - name: scraped_metrics
+      query: sum(scrape_samples_scraped{job="kube-state-metrics-exporter"})
 ```
 
-- observed.json
+- observed.yml
 That is supposed to be generic for any container orchestrator based on kubernetes
 ```
-[
-	{ "name":"cpu","unit":"vCPUs","query":"sum (rate (container_cpu_usage_seconds_total{pod=~\"$pod\",namespace=~\"$namespace\",container=~\"$container\"}[$interval]))" },
-	{ "name":"mem","unit":"bytes","query":"sum (container_memory_working_set_bytes{pod=~\"$pod\",namespace=~\"$namespace\",container=~\"$container\"}[$interval]))" }
-]
+- name: cpu
+  unit: m
+  query: 1000*sum (rate (container_cpu_usage_seconds_total{pod=~"$pod",namespace=~"$namespace",container=~"$container"}[$interval]))
+- name: mem
+  unit: Mi
+  query: sum (container_memory_working_set_bytes{pod=~"$pod",namespace=~"$namespace",container=~"$container"})/(1024*1024)
 ```
 
-- control.json
+- control.yml
 That is supposed to be generic for any container orchestrator based on kubernetes
 ```
-[
-	{ "name":"cpu_limit","query":"max (kube_pod_container_resource_limits_cpu_cores{pod=~\"$pod\",namespace=~\"$namespace\",container=~\"$container\"})"" },
-	{ "name":"mem_limit","query":"max (kube_pod_container_resource_limits_memory_bytes{pod=~\"$pod\",namespace=~\"$namespace\",container=~\"$container\"})" },
-	{ "name":"image_version","query":"kube_pod_container_info{pod=~\"$pod\",container=~\"$container\"})" }
-]
+- name: cpu_limit
+  unit: m
+  query: 1000*max (kube_pod_container_resource_limits_cpu_cores{pod=~"$pod",namespace=~"$namespace",container=~"$container"})
+- name: mem_limit
+  unit: Mi
+  query: max (kube_pod_container_resource_limits_memory_bytes{pod=~"$pod",namespace=~"$namespace",container=~"$container"})/(1024*1024)
+- name: image_version
+  query: topk(1,kube_pod_container_info{pod=~"$pod",container=~"$container"})
 ```
 
 - ENV files
 ```
 PROM_ENDPOINT=http://prometheus:9090
-PROM_LOGIN=admin:admin
+PROMETHEUS_AUTH_USER=admin
+PROMETHEUS_AUTH_PWD=admin
 REGRESSION_MIN_ROI=1d
 REGRESSION_MAX_ROI=7d
 SAMPLING_INTERVAL=5m

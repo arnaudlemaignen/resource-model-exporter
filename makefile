@@ -9,10 +9,7 @@ BINARY_UNIX=$(BINARY_NAME)
 
 all: test build
 build:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -o bin/$(BINARY_UNIX) -v
-	# mkdir bin/resources
-	cp resources/*.* bin/resources
-	cp .env bin/
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -o $(BINARY_UNIX) -v
 test:
 	$(GOTEST) -v ./...
 clean:

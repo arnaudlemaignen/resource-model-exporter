@@ -43,7 +43,15 @@ func Init() *Exporter {
 	}
 
 	promEndpoint := os.Getenv("PROM_ENDPOINT")
-	promLogin := os.Getenv("PROM_LOGIN")
+	promUser := os.Getenv("PROMETHEUS_AUTH_USER")
+	promPwd := os.Getenv("PROMETHEUS_AUTH_PWD")
+	promLogin := ""
+	if promUser == "" || promPwd =="" {
+	  log.Info("PROMETHEUS_AUTH_USER and or PROMETHEUS_AUTH_PWD were not set, will not use basic auth.")
+	} else {
+	  promLogin = promUser+":"+promPwd
+	}
+  
 	minRoi := os.Getenv("REGRESSION_MIN_ROI")
 	maxRoi := os.Getenv("REGRESSION_MAX_ROI")
 	interval = os.Getenv("SAMPLING_INTERVAL")

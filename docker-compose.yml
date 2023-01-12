@@ -13,7 +13,6 @@ services:
     volumes:
       - ./compose/resource_model_exporter/:/resources/
     environment:
-      - PROM_LOGIN=
       - PROM_ENDPOINT=localhost:9090
       - REGRESSION_MIN_ROI=5m
       - REGRESSION_MAX_ROI=5m
