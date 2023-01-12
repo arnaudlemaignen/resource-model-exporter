@@ -175,15 +175,9 @@ You can build a docker image locally with the following commands:
   * You will find a CircleCI configuration in [`.circleci/config.yml`](.circleci/config.yml).
   * See the [Community page](https://prometheus.io/community) for how to reach the Prometheus developers and users on various communication channels. -->
 
-## Contributing
+## Contributions
 
-<!-- Refer to [CONTRIBUTING.md](https://github.com/prometheus/prometheus/blob/main/CONTRIBUTING.md) -->
+Pull requests, comments and suggestions are welcome.
 
-## License
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for more information.d](https://github.com/prometheus/prometheus/blob/main/CONTRIBUTING.md) -->
 
-<!-- Apache License 2.0, see [LICENSE](https://github.com/prometheus/prometheus/blob/main/LICENSE). -->
-
-
-<!-- [hub]: https://hub.docker.com/r/prom/prometheus/
-[circleci]: https://circleci.com/gh/prometheus/prometheus
-[quay]: https://quay.io/repository/prometheus/prometheus -->
