@@ -9,7 +9,7 @@ services:
   dimres:
     build: .
     # ports:
-    #   - "9801:9801"
+    #   - "9901:9901"
     volumes:
       - ./compose/resource_model_exporter/:/resources/
     environment:

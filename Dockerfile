@@ -16,6 +16,6 @@ RUN chmod +x /resource_model_exporter
 
 USER nobody
 # free port see https://github.com/prometheus/prometheus/wiki/Default-port-allocations
-EXPOSE 9801
+EXPOSE 9901
 
 ENTRYPOINT [ "/resource_model_exporter" ]

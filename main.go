@@ -22,7 +22,7 @@ var (
 	version           = "v0.01"
 	interval          = ""
 	round             = 0
-	listenAddress     = flag.String("web.listen-address", ":9801", "Address to listen on for telemetry")
+	listenAddress     = flag.String("web.listen-address", ":9901", "Address to listen on for telemetry")
 	metricsPath       = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics")
 	resJsonPredictors = "resources/predictors.yml"
 	resJsonObserved   = "resources/observed.yml"
