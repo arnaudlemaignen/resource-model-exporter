@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"strings"
 	"time"
+	"os"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
@@ -136,12 +137,12 @@ func (e *Exporter) CreatePromMetrics(ch chan<- prometheus.Metric, container stri
 		floatLastPredictorValues[j] = float64(pred.Values.(model.Matrix)[0].Values[0].Value)
 	}
 	prediction, err := r.Predict(floatLastPredictorValues)
-	if err != nil {
+	if err == nil {
 		ch <- prometheus.MustNewConstMetric(
 			metricPrediction, prometheus.GaugeValue, prediction, container, resource, unit, r.Formula,
 		)
 	} else {
-		log.Warn("Prediction was not successful for container ", container, " resource ", resource)
+		log.Warn("Prediction was not successful for container ", container, " resource ", resource, " err ",err)
 	}
 
 }
@@ -394,6 +395,42 @@ func FindControlQuery(name string, controlVars []ControlVarQueries) string {
 }
 
 func ExportResultToJson(reg RegressionExport) {
-	file, _ := json.MarshalIndent(reg, "", " ")
-	_ = ioutil.WriteFile("test.json", file, 0644)
+	//const EXPORT_PATH = "export/"
+	//TODO maybe have 1 file per Day and clean up to keep only last X days
+	filename := "export.json"
+
+    err := checkFile(filename)
+    if err != nil {
+        log.Error(err)
+    }
+    file, err := ioutil.ReadFile(filename)
+    if err != nil {
+        log.Error(err)
+    }
+
+	//build the Json struct
+    data := []RegressionExport{}
+    json.Unmarshal(file, &data)
+    data = append(data, reg)
+
+    // Preparing the data to be marshalled and written.
+    dataBytes, err := json.Marshal(data)
+    if err != nil {
+        log.Error(err)
+    }
+    err = ioutil.WriteFile(filename, dataBytes, 0644)
+    if err != nil {
+        log.Error(err)
+    }
+}
+
+func checkFile(filename string) error {
+    _, err := os.Stat(filename)
+    if os.IsNotExist(err) {
+        _, err := os.Create(filename)
+        if err != nil {
+            return err
+        }
+    }
+    return nil
 }

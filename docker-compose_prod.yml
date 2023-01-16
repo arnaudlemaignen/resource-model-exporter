@@ -6,6 +6,22 @@ volumes:
     grafana_data: {}
 
 services:
+  dimres:
+    build: .
+    # ports:
+    #   - "9901:9901"
+    volumes:
+      - ./compose/resource_model_exporter/:/resources/
+    environment:
+      - PROM_ENDPOINT=localhost:9090
+      - REGRESSION_MIN_ROI=5m
+      - REGRESSION_MAX_ROI=5m
+      - SAMPLING_INTERVAL=15s
+    depends_on:
+      - prometheus
+    restart: always
+    network_mode: "host"
+
   prometheus:
     image: prom/prometheus:v2.27.1
     volumes:

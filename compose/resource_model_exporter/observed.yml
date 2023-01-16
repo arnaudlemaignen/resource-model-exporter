@@ -1,7 +1,7 @@
 ---
 - name: cpu
   unit: m
-  query: 1000*sum (rate (container_cpu_usage_seconds_total{name=~"$container"}[$interval]))
+  query: 1000*sum (rate (container_cpu_usage_seconds_total{container=~"$container"}[$interval]))
 - name: mem
   unit: Mi
-  query: sum (container_memory_working_set_bytes{name=~"$container"})/(1024*1024)
+  query: sum (container_memory_working_set_bytes{container=~"$container"})/(1024*1024)

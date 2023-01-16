@@ -1,70 +1,16 @@
 ---
-- name: grafana
-  vars:
-  - name: container
-    value: github_grafana_1
-  resources:
-  - name: cpu
-    predictors:
-    - name: users
-      query: grafana_stat_active_users
-    - name: alerts
-      query: grafana_alerting_active_alerts
-    - name: http_requests_total
-      query: sum(rate(http_requests_total{job="grafana"}[$interval]))
-  - name: mem
-    predictors:
-    - name: users
-      query: grafana_stat_active_users
-    - name: alerts
-      query: grafana_alerting_active_alerts
-    - name: http_requests_total
-      query: sum(rate(http_requests_total{job="grafana"}[$interval]))
-
 - name: node-exporter
   vars:
   - name: container
-    value: github_node-exporter_1
+    value: node-exporter
+  - name: node
+    value: ".*"
   resources:
   - name: cpu
     predictors:
     - name: scraped_metrics
-      query: scrape_samples_scraped{job="node-exporter"}
+      query: sum(scrape_samples_scraped{job="node-exporter",instance=~"$node"})
   - name: mem
     predictors:
     - name: scraped_metrics
-      query: scrape_samples_scraped{job="node-exporter"}
-
-- name: cadvisor
-  vars:
-  - name: container
-    value: github_cadvisor_1
-  resources:
-  - name: cpu
-    predictors:
-    - name: scraped_metrics
-      query: scrape_samples_scraped{job="cadvisor"}
-  - name: mem
-    predictors:
-    - name: scraped_metrics
-      query: scrape_samples_scraped{job="cadvisor"}
-
-# As a rule of thumb, scraping is mostly cpu and disk write intensive, 
-# while answering queries (for dashboarding or alerting) is mostly memory and disk read intensive.
-- name: prometheus
-  vars:
-  - name: container
-    value: github_prometheus_1
-  resources:
-  - name: cpu
-    predictors:
-    - name: scraped_metrics
-      query: sum(scrape_samples_scraped)
-    - name: http_requests_total
-      query: sum(rate(http_requests_total{job="prometheus"}[$interval]))
-  - name: mem
-    predictors:
-    - name: scraped_metrics
-      query: sum(scrape_samples_scraped)
-    - name: http_requests_total
-      query: sum(rate(http_requests_total{job="prometheus"}[$interval]))
+      query: sum(scrape_samples_scraped{job="node-exporter",instance=~"$node"})
