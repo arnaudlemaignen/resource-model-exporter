@@ -30,7 +30,7 @@ var (
 	metricModelCoeffs = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "regression_coeff"),
 		"Resource model regression coeff for the last ROI",
-		[]string{"container", "resource", "coeff_name"}, nil,
+		[]string{"container", "resource", "coeff_name", "coeff_alias"}, nil,
 	)
 
 	metricModelR2 = prometheus.NewDesc(
@@ -47,6 +47,11 @@ var (
 		prometheus.BuildFQName(namespace, "", "regression_n"),
 		"Resource model regression number of samples for the last ROI",
 		[]string{"container", "resource"}, nil,
+	)
+	metricPredictor = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "predictor_usage"),
+		"Predictor resource measured usage for the last ROI",
+		[]string{"container", "resource", "coeff_name", "coeff_alias"}, nil,
 	)
 )
 

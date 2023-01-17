@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 	"os"
+	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
@@ -105,11 +106,11 @@ func (e *Exporter) CreatePromMetrics(ch chan<- prometheus.Metric, container stri
 	for i, coeff := range r.GetCoeffs() {
 		if i == 0 {
 			ch <- prometheus.MustNewConstMetric(
-				metricModelCoeffs, prometheus.GaugeValue, coeff, container, resource, "offset",
+				metricModelCoeffs, prometheus.GaugeValue, coeff, container, resource, "offset", "offset",
 			)
 		} else {
 			ch <- prometheus.MustNewConstMetric(
-				metricModelCoeffs, prometheus.GaugeValue, coeff, container, resource, r.GetVar(i-1),
+				metricModelCoeffs, prometheus.GaugeValue, coeff, container, resource, "predictor_"+strconv.Itoa(i-1), r.GetVar(i-1),
 			)
 		}
 	}
@@ -135,7 +136,13 @@ func (e *Exporter) CreatePromMetrics(ch chan<- prometheus.Metric, container stri
 	floatLastPredictorValues := make([]float64, len(measuredPredictors))
 	for j, pred := range measuredPredictors {
 		floatLastPredictorValues[j] = float64(pred.Values.(model.Matrix)[0].Values[0].Value)
+		//Add Predictors values for analysis
+		ch <- prometheus.MustNewConstMetric(
+			metricPredictor, prometheus.GaugeValue, floatLastPredictorValues[j], container, resource, "predictor_"+strconv.Itoa(j), pred.Predictor,
+		)
 	}
+
+	//Calulate Prediction
 	prediction, err := r.Predict(floatLastPredictorValues)
 	if err == nil {
 		ch <- prometheus.MustNewConstMetric(
