@@ -45,7 +45,9 @@ type RegressionExport struct {
 	Round         int
 	Container     string
 	Resource      string
-	Image_Version string
+	ImageVersion string
+	CpuModel     string
+	NodeType     string
 	Timings       []Timing
 	Nodes         []Node
 	Namespaces    []string
@@ -69,7 +71,8 @@ type Reg struct {
 	Unit               string
 	Predictors         []PredictorExport
 	Offset             float64
-	Limit              float64
+	CpuLimit           float64
+	MemLimit           float64
 	R2                 float64
 	VarianceObserved   float64
 	VariancePredictors float64
@@ -90,6 +93,12 @@ type PredictorMeasurement struct {
 type Measurement struct {
 	Predictors   []PredictorMeasurement
 	Usage        model.Value
-	Limit        model.Value
-	ImageVersion model.Value
+}
+
+type MeasurementConf struct {
+	CpuLimit        float64
+	MemLimit        float64
+	ImageVersion    string
+	CpuModel        string
+	NodeType        string
 }

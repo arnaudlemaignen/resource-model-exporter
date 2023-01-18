@@ -18,7 +18,7 @@ var (
 	metricMeasurementConfig = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "measurement_config"),
 		"Measurement configuration details",
-		[]string{"namespace", "pod", "container", "image_version", "node", "node_type", "cpu_freq_ghz"}, nil,
+		[]string{"container", "image_version", "cpu_limit_m", "mem_limit_Mi", "node_type", "cpu_model"}, nil,
 	)
 
 	metricPrediction = prometheus.NewDesc(
@@ -84,7 +84,6 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	ch <- metricModelR2
 	ch <- metricModelVariance
 	ch <- metricModelN
-
 }
 
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {

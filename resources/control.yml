@@ -7,3 +7,7 @@
   query: max (kube_pod_container_resource_limits_memory_bytes{container=~"$container"})/(1024*1024)
 - name: image_version
   query: topk(1,kube_pod_container_info{container=~"$container"})
+- name: cpu_model
+  query: topk(1,node_cpu_info)
+- name: node_type
+  query: topk(1,node_boot_time_seconds)
