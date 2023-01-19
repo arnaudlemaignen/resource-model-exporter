@@ -11,8 +11,8 @@ RUN ./resource_model_exporter --help
 FROM quay.io/prometheus/busybox-linux-amd64:glibc AS bin
 LABEL maintainer="The Prometheus Authors <prometheus-developers@googlegroups.com>"
 
-COPY --from=build-stage /src/resource_model_exporter /
-COPY resources/ /resources/
+COPY --from=build-stage /src/go/resource_model_exporter /
+COPY go/resources/ /resources/
 RUN chmod +x /resource_model_exporter
 
 USER nobody
