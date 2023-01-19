@@ -3,6 +3,7 @@ FROM golang:1.18 as build-stage
 WORKDIR /src
 COPY . .
 
+WORKDIR /src/go
 RUN make test
 RUN make build
 RUN ./resource_model_exporter --help
