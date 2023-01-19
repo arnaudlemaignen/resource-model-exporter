@@ -1,4 +1,4 @@
-module arnaudlemaignen/resource-model-exporter
+module resource-model-exporter
 
 go 1.15
 

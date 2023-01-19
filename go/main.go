@@ -1,15 +1,13 @@
 package main
 
 import (
+	"resource-model-exporter/pkg/utils"
+	"resource-model-exporter/pkg/collector"
 	"flag"
-	"io/ioutil"
 	"net/http"
 	"os"
 
-	// "time"
-
 	"github.com/joho/godotenv"
-	"gopkg.in/yaml.v2"
 
 	"github.com/hyperjumptech/jiffy"
 	time "github.com/hyperjumptech/jiffy"
@@ -20,8 +18,6 @@ import (
 
 var (
 	version           = "v0.01"
-	interval          = ""
-	round             = 0
 	listenAddress     = flag.String("web.listen-address", ":9901", "Address to listen on for telemetry")
 	metricsPath       = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics")
 	resJsonPredictors = "resources/predictors.yml"
@@ -34,7 +30,7 @@ func Ready() string {
 	return "Resource Model Exporter is ready"
 }
 
-func Init() *Exporter {
+func Init() *collector.Exporter {
 	flag.Parse()
 
 	err := godotenv.Load(".env")
@@ -54,7 +50,7 @@ func Init() *Exporter {
   
 	minRoi := os.Getenv("REGRESSION_MIN_ROI")
 	maxRoi := os.Getenv("REGRESSION_MAX_ROI")
-	interval = os.Getenv("SAMPLING_INTERVAL")
+	interval := os.Getenv("SAMPLING_INTERVAL")
 
 	// http://user:pass@localhost/ to use basic auth
 	promURL := "http://" + promEndpoint
@@ -67,9 +63,9 @@ func Init() *Exporter {
 	log.Info("Sampling Interval      => ", interval)
 
 	//populate services maps
-	predictors := OpenPredictors(resJsonPredictors)
-	observed := OpenObserved(resJsonObserved)
-	control := OpenControl(resJsonControl)
+	predictors := utils.OpenPredictors(resJsonPredictors)
+	observed := utils.OpenObserved(resJsonObserved)
+	control := utils.OpenControl(resJsonControl)
 	//TODO validate json
 	//1. check that at least container is provided
 	//2. check that all $vars from dim input factor queries can be reconciled
@@ -90,7 +86,7 @@ func Init() *Exporter {
 	}
 
 	//Registering Exporter
-	exporter := NewExporter(promURL, version, timeMinRoi, timeMaxRoi, timeInterval, predictors, observed, control)
+	exporter := collector.NewExporter(promURL, version, timeMinRoi, timeMaxRoi, timeInterval, predictors, observed, control)
 	prometheus.MustRegister(exporter)
 
 	// test()
@@ -151,67 +147,4 @@ func main() {
 	log.Fatal(http.ListenAndServe(*listenAddress, nil))
 }
 
-//helpers
-func ReadFile(filename string) []byte {
-	file, err := os.Open(filename)
-	if err != nil {
-		log.Error(err)
-		return nil
-	} else {
-		log.Info("Successfully Opened " + filename)
-	}
 
-	defer file.Close()
-	byteValue, err := ioutil.ReadAll(file)
-	if err != nil {
-		log.Error(err)
-		return nil
-	}
-	return byteValue
-}
-
-func OpenPredictors(filename string) []PredictorVarQueries {
-	byteValue := ReadFile(filename)
-	var result []PredictorVarQueries
-	yaml.Unmarshal(byteValue, &result)
-	if len(result) == 0 {
-		log.Error(filename, " is empty or not well formated")
-	}
-	for i := 0; i < len(result); i++ {
-		log.Debug("Var: " + result[i].Vars[0].Name)
-		log.Debug("Var: " + result[i].Vars[0].Value)
-		log.Debug("Resource Name: " + result[i].Resources[0].Name)
-		log.Debug("Resource Predictor Name: " + result[i].Resources[0].Predictor[0].Name)
-		log.Debug("Resource Predictor Query: " + result[i].Resources[0].Predictor[0].Query)
-	}
-	return result
-}
-
-func OpenObserved(filename string) []ObservedVarQueries {
-	byteValue := ReadFile(filename)
-	var result []ObservedVarQueries
-	yaml.Unmarshal(byteValue, &result)
-	if len(result) == 0 {
-		log.Error(filename, " is empty or not well formated")
-	}
-	for i := 0; i < len(result); i++ {
-		log.Debug("Resource Name: " + result[i].Name)
-		log.Debug("Resource Unit: " + result[i].Unit)
-		log.Debug("Resource Query: " + result[i].Query)
-	}
-	return result
-}
-
-func OpenControl(filename string) []ControlVarQueries {
-	byteValue := ReadFile(filename)
-	var result []ControlVarQueries
-	yaml.Unmarshal(byteValue, &result)
-	if len(result) == 0 {
-		log.Error(filename, " is empty or not well formated")
-	}
-	for i := 0; i < len(result); i++ {
-		log.Debug("Control Name: " + result[i].Name)
-		log.Debug("Control Query: " + result[i].Query)
-	}
-	return result
-}

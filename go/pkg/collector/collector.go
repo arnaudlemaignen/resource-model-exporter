@@ -1,6 +1,7 @@
-package main
+package collector
 
 import (
+	"resource-model-exporter/pkg/types"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -8,6 +9,7 @@ import (
 )
 
 var (
+	round     = 0
 	namespace = "res_model"
 	// Metrics
 	metricConfig = prometheus.NewDesc(
@@ -58,12 +60,12 @@ var (
 type Exporter struct {
 	promURL, version         string
 	minRoi, maxRoi, interval time.Duration
-	predictors               []PredictorVarQueries
-	observed                 []ObservedVarQueries
-	control                  []ControlVarQueries
+	predictors               []types.PredictorVarQueries
+	observed                 []types.ObservedVarQueries
+	control                  []types.ControlVarQueries
 }
 
-func NewExporter(promURL string, version string, minRoi time.Duration, maxRoi time.Duration, interval time.Duration, predictors []PredictorVarQueries, observed []ObservedVarQueries, control []ControlVarQueries) *Exporter {
+func NewExporter(promURL string, version string, minRoi time.Duration, maxRoi time.Duration, interval time.Duration, predictors []types.PredictorVarQueries, observed []types.ObservedVarQueries, control []types.ControlVarQueries) *Exporter {
 	return &Exporter{
 		promURL:    promURL,
 		version:    version,
