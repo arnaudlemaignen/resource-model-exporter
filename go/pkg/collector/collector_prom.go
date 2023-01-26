@@ -1,14 +1,16 @@
 package collector
 
 import (
-	"resource-model-exporter/pkg/types"
-	"resource-model-exporter/pkg/utils"
 	"encoding/json"
 	"io/ioutil"
-	"strings"
-	"time"
 	"os"
+	"regexp"
+	"resource-model-exporter/pkg/types"
+	"resource-model-exporter/pkg/utils"
 	"strconv"
+	"strings"
+
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
@@ -18,7 +20,7 @@ import (
 
 func (e *Exporter) CollectPromMetrics(ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(
-		metricConfig, prometheus.GaugeValue, 1, e.version, e.minRoi.String(), e.maxRoi.String(), e.interval.String(),
+		metricConfig, prometheus.GaugeValue, 1, e.version, e.maxRoi.String(), e.interval.String(),
 	)
 
 	e.HitProm(ch)
@@ -87,15 +89,15 @@ func (e *Exporter) MeasureResourceConfig(vars []types.Var) types.MeasurementConf
 	//get cpu model
 	//   needs extra node_exporter --collector.cpu.info flag
 	//   node_cpu_info{cachesize="3072 KB", core="0", cpu="0", family="6", instance="localhost:9100", job="node-exporter", microcode="0xffffffff", model="61", model_name="Intel(R) Core(TM) i5-5200U CPU @ 2.20GHz", package="0", stepping="4", vendor="GenuineIntel"}
-    //get AWS instance Type
+	//get AWS instance Type
 	//   node_boot_time_seconds{kubernetes_io_arch="amd64",node_kubernetes_io_instance_type="r5a.4xlarge"}
-	
+
 	var c types.MeasurementConf
 	c.CpuLimit = GetValue(MeasureControl(e.promURL, FindControlQuery("cpu_limit", e.control), vars, e.interval))
 	c.MemLimit = GetValue(MeasureControl(e.promURL, FindControlQuery("mem_limit", e.control), vars, e.interval))
-	c.ImageVersion = GetLabel("image_version",MeasureControl(e.promURL, FindControlQuery("image_version", e.control), vars, e.interval))
-	c.CpuModel = GetLabel("model_name",MeasureControl(e.promURL, FindControlQuery("cpu_model", e.control), vars, e.interval))
-	c.NodeType = GetLabel("node_kubernetes_io_instance_type",MeasureControl(e.promURL, FindControlQuery("node_type", e.control), vars, e.interval))
+	c.ImageVersion = GetLabel("image_version", MeasureControl(e.promURL, FindControlQuery("image_version", e.control), vars, e.interval))
+	c.CpuModel = GetLabel("model_name", MeasureControl(e.promURL, FindControlQuery("cpu_model", e.control), vars, e.interval))
+	c.NodeType = GetLabel("node_kubernetes_io_instance_type", MeasureControl(e.promURL, FindControlQuery("node_type", e.control), vars, e.interval))
 
 	return c
 }
@@ -134,7 +136,8 @@ func (e *Exporter) CreatePromMetrics(ch chan<- prometheus.Metric, container stri
 	//Add prediction based on the last predictor values
 	floatLastPredictorValues := make([]float64, len(measuredPredictors))
 	for j, pred := range measuredPredictors {
-		floatLastPredictorValues[j] = float64(pred.Values.(model.Matrix)[0].Values[0].Value)
+		lastValueIndex := len(pred.Values.(model.Matrix)[0].Values) - 1
+		floatLastPredictorValues[j] = float64(pred.Values.(model.Matrix)[0].Values[lastValueIndex].Value)
 		//Add Predictors values for analysis
 		ch <- prometheus.MustNewConstMetric(
 			metricPredictor, prometheus.GaugeValue, floatLastPredictorValues[j], container, resource, "predictor_"+strconv.Itoa(j), pred.Predictor,
@@ -148,13 +151,13 @@ func (e *Exporter) CreatePromMetrics(ch chan<- prometheus.Metric, container stri
 			metricPrediction, prometheus.GaugeValue, prediction, container, resource, unit, r.Formula,
 		)
 	} else {
-		log.Warn("Prediction was not successful for container ", container, " resource ", resource, " err ",err)
+		log.Warn("Prediction was not successful for container ", container, " resource ", resource, " err ", err)
 	}
 
 }
 
 func (e *Exporter) CreatePromConfigMetric(ch chan<- prometheus.Metric, container string, conf types.MeasurementConf) {
-    cpuLimit := strconv.Itoa(int(conf.CpuLimit))
+	cpuLimit := strconv.Itoa(int(conf.CpuLimit))
 	memLimit := strconv.Itoa(int(conf.MemLimit))
 
 	ch <- prometheus.MustNewConstMetric(
@@ -177,21 +180,29 @@ func ValidateMeasurement(container string, resource string, measuredPredictors [
 		return false
 	}
 
-	observedSize := len(measuredUsage.(model.Matrix)[0].Values)
-	for _, pred := range measuredPredictors {
-		if len(pred.Values.(model.Matrix)) == 0 {
-			log.Error("Observed Size was ", observedSize, " but Predictor size was 0 for PredictorName ", pred.Predictor, " for container ", container, " resource ", resource)
-			return false
-		}
-		predictorSize := len(pred.Values.(model.Matrix)[0].Values)
-		if predictorSize != observedSize {
-			log.Warn("Observed Size was ", observedSize, " but Predictor size was ", predictorSize, " for PredictorName ", pred.Predictor, " for container ", container, " resource ", resource)
-			// //We will limit the number of entries to the smallest slice
-			// delta := observedSize - predictorSize
-			// // pred = (*pred)[delta:]
-			// newPredSlice := pred.Values
-			// newPredSlice = append(newPredSlice[1:delta], newPredSlice[delta:]...)
-			return false
+	//The regression MUST only happens when observedSize = predictorSize and != 0
+	if len(measuredUsage.(model.Matrix)) == 0 {
+		log.Error("Observed Size was 0 for container ", container, " resource ", resource)
+		return false
+	} else {
+		observedSize := len(measuredUsage.(model.Matrix)[0].Values)
+		for _, pred := range measuredPredictors {
+			if len(pred.Values.(model.Matrix)) == 0 {
+				log.Error("Predictor size was 0 for PredictorName ", pred.Predictor, " for container ", container, " resource ", resource)
+				return false
+			} else {
+				predictorSize := len(pred.Values.(model.Matrix)[0].Values)
+				if predictorSize != observedSize {
+					log.Info("Observed Size is ", observedSize, " is different from Predictor size ", predictorSize, " for PredictorName ", pred.Predictor, " => Will try to align them")
+					success, newMeasuredUsage, newMeasuredPredictor := alignObsPredMeasurements(measuredUsage.(model.Matrix)[0].Values, pred.Values.(model.Matrix)[0].Values)
+					if success {
+						measuredUsage.(model.Matrix)[0].Values = newMeasuredUsage
+						pred.Values.(model.Matrix)[0].Values = newMeasuredPredictor
+					} else {
+						return false
+					}
+				}
+			}
 		}
 	}
 
@@ -211,13 +222,66 @@ func ValidateMeasurement(container string, resource string, measuredPredictors [
 	return true
 }
 
+func alignObsPredMeasurements(measuredUsage []model.SamplePair, measuredPredictor []model.SamplePair) (bool, []model.SamplePair, []model.SamplePair) {
+	start := time.Now()
+
+	//We will create new slices and add the aligned elts
+	var newMeasuredUsage []model.SamplePair
+	var newMeasuredPredictor []model.SamplePair
+
+	//loop on the biggest slice
+	if len(measuredPredictor) > len(measuredUsage) {
+		for _, pred := range measuredPredictor {
+			for _, meas := range measuredUsage {
+				if areAligned(pred.Timestamp, meas.Timestamp) {
+					newMeasuredUsage = append(newMeasuredUsage, meas)
+					newMeasuredPredictor = append(newMeasuredPredictor, pred)
+					break
+				}
+			}
+		}
+	} else {
+		for _, meas := range measuredUsage {
+			for _, pred := range measuredPredictor {
+				if areAligned(pred.Timestamp, meas.Timestamp) {
+					newMeasuredUsage = append(newMeasuredUsage, meas)
+					newMeasuredPredictor = append(newMeasuredPredictor, pred)
+					break
+				}
+			}
+		}
+	}
+
+	log.Info("Observed and Predictors slices aligned in ", time.Since(start))
+
+	if len(newMeasuredUsage) == len(newMeasuredPredictor) && len(newMeasuredUsage) > 0 {
+		log.Info("Alignment Success : Observed Size is ", len(newMeasuredUsage))
+		return true, newMeasuredUsage, newMeasuredPredictor
+	} else {
+		log.Warn("Alignment Failed : Observed Size is ", len(newMeasuredUsage), ", Predictor size is ", len(newMeasuredPredictor), ", the regression will be skipped")
+		return false, nil, nil
+	}
+}
+
+func areAligned(a, b model.Time) bool {
+	durationTolerance := 1 * time.Second
+	//The time between the observed and the predictor must be less than 1s otherwise it will be removed from the scope
+	//@[1674577232.893] && @[1674577232.193] => OK
+	//@[1674577230.893] && @[1674577232.893] => NOK
+	if a.After(b) {
+		return a.Sub(b) < durationTolerance
+	} else {
+		return b.Sub(a) < durationTolerance
+	}
+}
+
 func getLimit(resource string, measuredConf types.MeasurementConf) float64 {
-	if resource=="cpu" {
+	if resource == "cpu" {
 		return measuredConf.CpuLimit
-	} else if resource=="mem" {
+	} else if resource == "mem" {
 		return measuredConf.MemLimit
 	} else {
-		log.Warn("Limit for resource ",resource," is not supported")
+		log.Warn("Limit for resource ", resource, " is not supported")
 	}
 	return -1.0
 }
@@ -315,7 +379,7 @@ func MeasurePredictors(resource string, promURL string, maxRoi time.Duration, in
 		query := SubstitueVars(pred.Query, vars, interval)
 		data := QueryRange(promURL, query, maxRoi, interval)
 		if data != nil {
-			result = append(result, types.PredictorMeasurement{pred.Name, data})
+			result = append(result, types.PredictorMeasurement{Predictor: pred.Name, Values: data})
 		}
 	}
 
@@ -364,8 +428,9 @@ func SubstitueVars(query string, vars []types.Var, interval time.Duration) strin
 	for _, variable := range vars {
 		query = strings.Replace(query, "$"+variable.Name, variable.Value, -1)
 	}
-	//no $ should be in query now
-	if strings.Contains(query, "$") {
+	//no $ should be in query now (except $1... used in label_replace promQL)
+	matched, _ := regexp.MatchString("\\$[a-z].*", query)
+	if matched {
 		log.Error("Missing a var for query ", query)
 	}
 	return query
@@ -409,29 +474,29 @@ func ExportResultToJson(reg types.RegressionExport) {
 	//TODO maybe have 1 file per Day and clean up to keep only last X days
 	filename := "export.json"
 
-    err := checkFile(filename)
-    if err != nil {
-        log.Error(err)
-    }
-    file, err := ioutil.ReadFile(filename)
-    if err != nil {
-        log.Error(err)
-    }
+	err := checkFile(filename)
+	if err != nil {
+		log.Error(err)
+	}
+	file, err := ioutil.ReadFile(filename)
+	if err != nil {
+		log.Error(err)
+	}
 
 	//build the Json struct
-    data := []types.RegressionExport{}
-    json.Unmarshal(file, &data)
-    data = append(data, reg)
+	data := []types.RegressionExport{}
+	json.Unmarshal(file, &data)
+	data = append(data, reg)
 
-    // Preparing the data to be marshalled and written.
-    dataBytes, err := json.Marshal(data)
-    if err != nil {
-        log.Error(err)
-    }
-    err = ioutil.WriteFile(filename, dataBytes, 0644)
-    if err != nil {
-        log.Error(err)
-    }
+	// Preparing the data to be marshalled and written.
+	dataBytes, err := json.Marshal(data)
+	if err != nil {
+		log.Error(err)
+	}
+	err = ioutil.WriteFile(filename, dataBytes, 0644)
+	if err != nil {
+		log.Error(err)
+	}
 }
 
 func GetLabel(label string, metric model.Value) string {
@@ -452,12 +517,12 @@ func GetValue(metric model.Value) float64 {
 }
 
 func checkFile(filename string) error {
-    _, err := os.Stat(filename)
-    if os.IsNotExist(err) {
-        _, err := os.Create(filename)
-        if err != nil {
-            return err
-        }
-    }
-    return nil
+	_, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		_, err := os.Create(filename)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

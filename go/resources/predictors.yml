@@ -1,16 +1,15 @@
 ---
-- name: node-exporter
+- name: control-sample
   vars:
   - name: container
-    value: node-exporter
-  - name: node
-    value: ".*"
+    value: resource-control-sample
   resources:
   - name: cpu
     predictors:
-    - name: scraped_metrics
-      query: sum(scrape_samples_scraped{job="node-exporter",instance=~"$node"})
+    - name: image_pixels_M
+      query: sum(res_control_measurement_pixels{job="resource-control-sample"}) / 1000000
   - name: mem
     predictors:
-    - name: scraped_metrics
-      query: sum(scrape_samples_scraped{job="node-exporter",instance=~"$node"})
+    - name: image_pixels_M
+      query: sum(res_control_measurement_pixels{job="resource-control-sample"}) / 1000000
+      

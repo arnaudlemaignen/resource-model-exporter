@@ -15,7 +15,7 @@ var (
 	metricConfig = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "config"),
 		"Main configuration details",
-		[]string{"version", "min_roi", "max_roi", "interval"}, nil,
+		[]string{"version", "max_roi", "interval"}, nil,
 	)
 	metricMeasurementConfig = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "measurement_config"),
@@ -58,18 +58,17 @@ var (
 )
 
 type Exporter struct {
-	promURL, version         string
-	minRoi, maxRoi, interval time.Duration
-	predictors               []types.PredictorVarQueries
-	observed                 []types.ObservedVarQueries
-	control                  []types.ControlVarQueries
+	promURL, version string
+	maxRoi, interval time.Duration
+	predictors       []types.PredictorVarQueries
+	observed         []types.ObservedVarQueries
+	control          []types.ControlVarQueries
 }
 
-func NewExporter(promURL string, version string, minRoi time.Duration, maxRoi time.Duration, interval time.Duration, predictors []types.PredictorVarQueries, observed []types.ObservedVarQueries, control []types.ControlVarQueries) *Exporter {
+func NewExporter(promURL string, version string, maxRoi time.Duration, interval time.Duration, predictors []types.PredictorVarQueries, observed []types.ObservedVarQueries, control []types.ControlVarQueries) *Exporter {
 	return &Exporter{
 		promURL:    promURL,
 		version:    version,
-		minRoi:     minRoi,
 		maxRoi:     maxRoi,
 		interval:   interval,
 		predictors: predictors,

@@ -28,6 +28,11 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9901']
 
+  - job_name: 'resource-control-sample'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['localhost:9905']
+
   - job_name: 'grafana'
     scrape_interval: 5s
     static_configs:

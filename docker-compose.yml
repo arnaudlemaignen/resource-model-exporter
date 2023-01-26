@@ -2,10 +2,27 @@
 version: '3.7'
 
 volumes:
+    resource_control_sample_output: {}
     prometheus_data: {}
     grafana_data: {}
 
 services:
+
+  resource-control-sample:
+    image: ghcr.io/arnaudlemaignen/resource-control-sample:latest
+    # ports:
+    #   - "9905:9905"
+    volumes:
+      - resource_control_sample_output:/output
+    environment:
+      - PIXELS_MIN=1
+      - PIXELS_MAX=1000000
+      - PIXELS_STEP=500
+    depends_on:
+      - prometheus
+    restart: always
+    network_mode: "host"
+
   prometheus:
     image: prom/prometheus:v2.27.1
     volumes:
@@ -36,8 +53,8 @@ services:
       - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
       - '--collector.cpu.info'
-      - --collector.filesystem.ignored-mount-points
-      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+    #  - --collector.filesystem.ignored-mount-points
+    #  - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
     # ports:
     #   - 9100:9100
     restart: always

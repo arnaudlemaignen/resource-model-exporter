@@ -1,15 +1,14 @@
 package main
 
 import (
-	"resource-model-exporter/pkg/utils"
-	"resource-model-exporter/pkg/collector"
 	"flag"
 	"net/http"
 	"os"
+	"resource-model-exporter/pkg/collector"
+	"resource-model-exporter/pkg/utils"
 
 	"github.com/joho/godotenv"
 
-	"github.com/hyperjumptech/jiffy"
 	time "github.com/hyperjumptech/jiffy"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -42,13 +41,12 @@ func Init() *collector.Exporter {
 	promUser := os.Getenv("PROMETHEUS_AUTH_USER")
 	promPwd := os.Getenv("PROMETHEUS_AUTH_PWD")
 	promLogin := ""
-	if promUser == "" || promPwd =="" {
-	  log.Info("PROMETHEUS_AUTH_USER and or PROMETHEUS_AUTH_PWD were not set, will not use basic auth.")
+	if promUser == "" || promPwd == "" {
+		log.Info("PROMETHEUS_AUTH_USER and or PROMETHEUS_AUTH_PWD were not set, will not use basic auth.")
 	} else {
-	  promLogin = promUser+":"+promPwd
+		promLogin = promUser + ":" + promPwd
 	}
-  
-	minRoi := os.Getenv("REGRESSION_MIN_ROI")
+
 	maxRoi := os.Getenv("REGRESSION_MAX_ROI")
 	interval := os.Getenv("SAMPLING_INTERVAL")
 
@@ -58,7 +56,6 @@ func Init() *collector.Exporter {
 		promURL = "http://" + promLogin + "@" + promEndpoint
 	}
 	log.Info("prometheus URL         => ", promURL)
-	log.Info("Min Region Of Interest => ", minRoi)
 	log.Info("Max Region Of Interest => ", maxRoi)
 	log.Info("Sampling Interval      => ", interval)
 
@@ -72,10 +69,6 @@ func Init() *collector.Exporter {
 
 	//3. check interval and minRoi/maxRoi are timestep
 	//time.ParseDuration does not supprt d w :(
-	timeMinRoi, errMinRoi := jiffy.DurationOf(minRoi)
-	if errMinRoi != nil {
-		log.Fatal("Invalid time duration for minRoi ", minRoi, " err: ", errMinRoi)
-	}
 	timeMaxRoi, errMaxRoi := time.DurationOf(maxRoi)
 	if errMaxRoi != nil {
 		log.Fatal("Invalid time duration for maxRoi ", maxRoi, " err: ", errMaxRoi)
@@ -86,7 +79,7 @@ func Init() *collector.Exporter {
 	}
 
 	//Registering Exporter
-	exporter := collector.NewExporter(promURL, version, timeMinRoi, timeMaxRoi, timeInterval, predictors, observed, control)
+	exporter := collector.NewExporter(promURL, version, timeMaxRoi, timeInterval, predictors, observed, control)
 	prometheus.MustRegister(exporter)
 
 	// test()
@@ -146,5 +139,3 @@ func main() {
 	log.Info("Listening on port " + *listenAddress)
 	log.Fatal(http.ListenAndServe(*listenAddress, nil))
 }
-
-
