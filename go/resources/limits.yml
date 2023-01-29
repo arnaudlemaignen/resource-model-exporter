@@ -1,0 +1,11 @@
+---
+# limits should be in the same unit as in observed
+- name: cpu
+  unit: m
+  query: 1000*max (kube_pod_container_resource_limits_cpu_cores{container=~"$container"})
+- name: mem
+  unit: Mi
+  query: max (kube_pod_container_resource_limits_memory_bytes{container=~"$container"})/(1024*1024)
+- name: storage_usage
+  unit: MiB
+  query: sum(container_fs_limit_bytes{id="/"} + on (device) group_right() container_fs_limit_bytes{container=~"$container"}*0)/(1024*1024)

@@ -1,0 +1,10 @@
+---
+- name: image_version
+  label: image
+  query: topk(1,container_last_seen{container=~"$container"})
+- name: cpu_model
+  label: model_name
+  query: topk(1,node_cpu_info)
+- name: node_type
+  label: node_kubernetes_io_instance_type
+  query: topk(1,node_boot_time_seconds)

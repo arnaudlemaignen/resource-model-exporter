@@ -34,25 +34,33 @@ type ObservedVarQueries struct {
 	Query string `yaml:"query"`
 }
 
-//control.yaml
-type ControlVarQueries struct {
+//info.yaml
+type InfoVarQueries struct {
 	Name  string `yaml:"name"`
+	Label string `yaml:"label"`
+	Query string `yaml:"query"`
+}
+
+//limit.yaml
+type LimitVarQueries struct {
+	Name  string `yaml:"name"`
+	Unit  string `yaml:"unit"`
 	Query string `yaml:"query"`
 }
 
 //JSON Export
 type RegressionExport struct {
-	Round         int
-	Container     string
-	Resource      string
+	Round        int
+	Container    string
+	Resource     string
 	ImageVersion string
 	CpuModel     string
 	NodeType     string
-	Timings       []Timing
-	Nodes         []Node
-	Namespaces    []string
-	Pods          []string
-	Regression    Reg
+	Timings      []Timing
+	Nodes        []Node
+	Namespaces   []string
+	Pods         []string
+	Regression   Reg
 }
 
 type Timing struct {
@@ -71,8 +79,7 @@ type Reg struct {
 	Unit               string
 	Predictors         []PredictorExport
 	Offset             float64
-	CpuLimit           float64
-	MemLimit           float64
+	Limits             []LimitExport
 	R2                 float64
 	VarianceObserved   float64
 	VariancePredictors float64
@@ -84,6 +91,12 @@ type PredictorExport struct {
 	Coeff float64
 }
 
+type LimitExport struct {
+	Name  string
+	Unit  string
+	Limit float64
+}
+
 //Measurement
 type PredictorMeasurement struct {
 	Predictor string
@@ -91,14 +104,12 @@ type PredictorMeasurement struct {
 }
 
 type Measurement struct {
-	Predictors   []PredictorMeasurement
-	Usage        model.Value
+	Predictors []PredictorMeasurement
+	Usage      model.Value
 }
 
 type MeasurementConf struct {
-	CpuLimit        float64
-	MemLimit        float64
-	ImageVersion    string
-	CpuModel        string
-	NodeType        string
+	ImageVersion string
+	CpuModel     string
+	NodeType     string
 }

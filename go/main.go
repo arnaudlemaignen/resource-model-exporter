@@ -21,7 +21,8 @@ var (
 	metricsPath       = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics")
 	resJsonPredictors = "resources/predictors.yml"
 	resJsonObserved   = "resources/observed.yml"
-	resJsonControl    = "resources/control.yml"
+	resJsonInfo       = "resources/info.yml"
+	resJsonLimit      = "resources/limits.yml"
 )
 
 //Readiness message
@@ -62,7 +63,8 @@ func Init() *collector.Exporter {
 	//populate services maps
 	predictors := utils.OpenPredictors(resJsonPredictors)
 	observed := utils.OpenObserved(resJsonObserved)
-	control := utils.OpenControl(resJsonControl)
+	info := utils.OpenInfo(resJsonInfo)
+	limits := utils.OpenLimits(resJsonLimit)
 	//TODO validate json
 	//1. check that at least container is provided
 	//2. check that all $vars from dim input factor queries can be reconciled
@@ -79,7 +81,7 @@ func Init() *collector.Exporter {
 	}
 
 	//Registering Exporter
-	exporter := collector.NewExporter(promURL, version, timeMaxRoi, timeInterval, predictors, observed, control)
+	exporter := collector.NewExporter(promURL, version, timeMaxRoi, timeInterval, predictors, observed, info, limits)
 	prometheus.MustRegister(exporter)
 
 	// test()

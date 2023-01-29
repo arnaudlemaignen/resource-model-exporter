@@ -38,29 +38,30 @@ func (e *Exporter) HitProm(ch chan<- prometheus.Metric) {
 		startContainer := time.Now()
 		container := FindContainerName(pred)
 		log.Info("Begin measurement of : ", container)
-		c := e.MeasureResourceConfig(pred.Vars)
-		e.CreatePromConfigMetric(ch, container, c)
+		conf := e.MeasureResourceConfig(ch, container, pred.Vars)
+		limits := e.MeasureResourceLimit(ch, container, pred)
 
 		validMeasurements := 0
-		//Resources today are CPU/Mem, more to come : Storage, IOPS, latency ...
+		//For any resources in the predictors yaml (CPU/Mem,Storage, IOPS...)
 		for _, resPred := range pred.Resources {
 			//TODO find where we spend time
 			// var timings []Timing
 			observed := FindObserved(resPred.Name, e.observed)
 
-			isValid, m := e.MeasureResource(container, resPred.Name, resPred.Predictor, observed.Query, c, pred.Vars)
+			isValid, m := e.MeasureResource(container, resPred.Name, resPred.Predictor, observed.Query, limits, pred.Vars)
 			//regression
 			if isValid {
+				log.Info("====> Regression for ", container, " ", resPred.Name)
 				r := RunRegression(container, resPred.Name, m.Predictors, m.Usage)
-				//TODEL
-				log.Info("Regression formula for ", container, " ", resPred.Name, " : ", r.Formula)
-				log.Info("Regression stats for ", container, " ", resPred.Name, ", R² : ", r.R2, ", Var. Observed : ", r.Varianceobserved, ", Var. Predictors : ", r.VariancePredicted)
+				log.Info("Formula : ", r.Formula)
+				log.Info("R² : ", r.R2, ", Var. Observed : ", r.Varianceobserved, ", Var. Predictors : ", r.VariancePredicted, ", N : ", len(m.Usage.(model.Matrix)[0].Values))
 				log.Debug("Regression ", r)
+
 				//create prom metrics
-				e.CreatePromMetrics(ch, container, resPred.Name, observed.Unit, m.Predictors, r)
+				e.CreatePromMetrics(ch, container, resPred.Name, observed.Unit, m, r)
 				//export data
-				ExportResultToJson(types.RegressionExport{Round: round, Container: container, Resource: resPred.Name, ImageVersion: c.ImageVersion, CpuModel: c.CpuModel, NodeType: c.NodeType,
-					Regression: types.Reg{Formula: r.Formula, Unit: observed.Unit, CpuLimit: c.CpuLimit, MemLimit: c.MemLimit,
+				ExportResultToJson(types.RegressionExport{Round: round, Container: container, Resource: resPred.Name, ImageVersion: conf.ImageVersion, CpuModel: conf.CpuModel, NodeType: conf.NodeType,
+					Regression: types.Reg{Formula: r.Formula, Unit: observed.Unit, Limits: limits,
 						R2: r.R2, VarianceObserved: r.Varianceobserved, VariancePredictors: r.VariancePredicted}})
 				validMeasurements++
 			}
@@ -69,13 +70,13 @@ func (e *Exporter) HitProm(ch chan<- prometheus.Metric) {
 	}
 }
 
-func (e *Exporter) MeasureResource(container string, resource string, preds []types.Predictor, measuredQuery string, conf types.MeasurementConf, vars []types.Var) (bool, types.Measurement) {
+func (e *Exporter) MeasureResource(container string, resource string, preds []types.Predictor, measuredQuery string, limits []types.LimitExport, vars []types.Var) (bool, types.Measurement) {
 	//measure predictors vars (dimensioning inputs)
 	measuredPredictors := MeasurePredictors(resource, e.promURL, e.maxRoi, e.interval, preds, vars)
 	//measure measured vars (resource usage)
 	measuredUsage := MeasureUsage(resource, e.promURL, e.maxRoi, e.interval, measuredQuery, vars)
 
-	isValid := ValidateMeasurement(container, resource, measuredPredictors, measuredUsage, conf)
+	isValid := e.ValidateMeasurement(container, resource, measuredPredictors, measuredUsage, limits)
 	var m types.Measurement
 	m.Predictors = measuredPredictors
 	m.Usage = measuredUsage
@@ -83,8 +84,8 @@ func (e *Exporter) MeasureResource(container string, resource string, preds []ty
 	return isValid, m
 }
 
-func (e *Exporter) MeasureResourceConfig(vars []types.Var) types.MeasurementConf {
-	//get the CPU/Mem limits to check we are under... use instant query (no need for historical)
+func (e *Exporter) MeasureResourceConfig(ch chan<- prometheus.Metric, container string, vars []types.Var) types.MeasurementConf {
+	//guse instant query (no need for historical)
 	//get the image version
 	//get cpu model
 	//   needs extra node_exporter --collector.cpu.info flag
@@ -93,16 +94,41 @@ func (e *Exporter) MeasureResourceConfig(vars []types.Var) types.MeasurementConf
 	//   node_boot_time_seconds{kubernetes_io_arch="amd64",node_kubernetes_io_instance_type="r5a.4xlarge"}
 
 	var c types.MeasurementConf
-	c.CpuLimit = GetValue(MeasureControl(e.promURL, FindControlQuery("cpu_limit", e.control), vars, e.interval))
-	c.MemLimit = GetValue(MeasureControl(e.promURL, FindControlQuery("mem_limit", e.control), vars, e.interval))
-	c.ImageVersion = GetLabel("image_version", MeasureControl(e.promURL, FindControlQuery("image_version", e.control), vars, e.interval))
-	c.CpuModel = GetLabel("model_name", MeasureControl(e.promURL, FindControlQuery("cpu_model", e.control), vars, e.interval))
-	c.NodeType = GetLabel("node_kubernetes_io_instance_type", MeasureControl(e.promURL, FindControlQuery("node_type", e.control), vars, e.interval))
+	c.ImageVersion = GetLabel(FindInfoLabel("image_version", e.info), MeasureControl(e.promURL, FindInfoQuery("image_version", e.info), vars, e.interval))
+	c.CpuModel = GetLabel(FindInfoLabel("cpu_model", e.info), MeasureControl(e.promURL, FindInfoQuery("cpu_model", e.info), vars, e.interval))
+	c.NodeType = GetLabel(FindInfoLabel("node_type", e.info), MeasureControl(e.promURL, FindInfoQuery("node_type", e.info), vars, e.interval))
+
+	ch <- prometheus.MustNewConstMetric(
+		metricMeasurementConfig, prometheus.GaugeValue, 1, container, c.ImageVersion, c.NodeType, c.CpuModel,
+	)
 
 	return c
 }
 
-func (e *Exporter) CreatePromMetrics(ch chan<- prometheus.Metric, container string, resource string, unit string, measuredPredictors []types.PredictorMeasurement, r *regression.Regression) {
+func (e *Exporter) MeasureResourceLimit(ch chan<- prometheus.Metric, container string, pred types.PredictorVarQueries) []types.LimitExport {
+	//get the CPU/Mem limits to check we are under... use instant query (no need for historical)
+	var c []types.LimitExport
+
+	for _, resPred := range pred.Resources {
+		query := FindLimitQuery(resPred.Name, e.limits)
+		if query != "" {
+			limit := GetValue(MeasureControl(e.promURL, query, pred.Vars, e.interval))
+			unit := FindLimitUnit(resPred.Name, e.limits)
+			c = append(c, types.LimitExport{Name: resPred.Name, Unit: unit, Limit: limit})
+			ch <- prometheus.MustNewConstMetric(
+				metricLimit, prometheus.GaugeValue, limit, container, resPred.Name, unit,
+			)
+		}
+	}
+
+	return c
+}
+
+func (e *Exporter) CreatePromMetrics(ch chan<- prometheus.Metric, container string, resource string, unit string, measurement types.Measurement, r *regression.Regression) {
+	measuredPredictors := measurement.Predictors
+	measuredObserved := measurement.Usage
+	//last value of the observed or Pred (same size)
+	lastValueIndex := len(measuredObserved.(model.Matrix)[0].Values) - 1
 	// Model Regression Coeff metrics
 	for i, coeff := range r.GetCoeffs() {
 		if i == 0 {
@@ -133,10 +159,14 @@ func (e *Exporter) CreatePromMetrics(ch chan<- prometheus.Metric, container stri
 		metricModelN, prometheus.GaugeValue, float64(len(measuredPredictors[0].Values.(model.Matrix)[0].Values)), container, resource,
 	)
 
+	//Add last usage value
+	ch <- prometheus.MustNewConstMetric(
+		metricObserved, prometheus.GaugeValue, float64(measuredObserved.(model.Matrix)[0].Values[lastValueIndex].Value), container, resource, unit,
+	)
+
 	//Add prediction based on the last predictor values
 	floatLastPredictorValues := make([]float64, len(measuredPredictors))
 	for j, pred := range measuredPredictors {
-		lastValueIndex := len(pred.Values.(model.Matrix)[0].Values) - 1
 		floatLastPredictorValues[j] = float64(pred.Values.(model.Matrix)[0].Values[lastValueIndex].Value)
 		//Add Predictors values for analysis
 		ch <- prometheus.MustNewConstMetric(
@@ -156,17 +186,8 @@ func (e *Exporter) CreatePromMetrics(ch chan<- prometheus.Metric, container stri
 
 }
 
-func (e *Exporter) CreatePromConfigMetric(ch chan<- prometheus.Metric, container string, conf types.MeasurementConf) {
-	cpuLimit := strconv.Itoa(int(conf.CpuLimit))
-	memLimit := strconv.Itoa(int(conf.MemLimit))
-
-	ch <- prometheus.MustNewConstMetric(
-		metricMeasurementConfig, prometheus.GaugeValue, 1, container, conf.ImageVersion, cpuLimit, memLimit, conf.NodeType, conf.CpuModel,
-	)
-}
-
 //MEASUREMENTS
-func ValidateMeasurement(container string, resource string, measuredPredictors []types.PredictorMeasurement, measuredUsage model.Value, conf types.MeasurementConf) bool {
+func (e *Exporter) ValidateMeasurement(container string, resource string, measuredPredictors []types.PredictorMeasurement, measuredUsage model.Value, limits []types.LimitExport) bool {
 	//validate that there is the same number of measurements for predictors and observed
 	//validate measurement based on limits
 	//if no kubestate => assume no limit, resources are not bounded
@@ -206,7 +227,12 @@ func ValidateMeasurement(container string, resource string, measuredPredictors [
 		}
 	}
 
-	limit := getLimit(resource, conf)
+	//to check that the data which is measured is well in the expected range
+	first := measuredUsage.(model.Matrix)[0].Values[0].Timestamp
+	last := measuredUsage.(model.Matrix)[0].Values[len(measuredUsage.(model.Matrix)[0].Values)-1].Timestamp
+	log.Info("Measurement ROI : to measure ", e.maxRoi, ", measured ", model.Time.Sub(last, first), ", Now - measured ", model.Now().Sub(first))
+
+	limit := getLimit(resource, limits)
 	//validate that the observed measures where not exceeding 90% of limit
 	if limit > 0 {
 		//find max resource MeasureUsage
@@ -275,14 +301,16 @@ func areAligned(a, b model.Time) bool {
 	}
 }
 
-func getLimit(resource string, measuredConf types.MeasurementConf) float64 {
-	if resource == "cpu" {
-		return measuredConf.CpuLimit
-	} else if resource == "mem" {
-		return measuredConf.MemLimit
-	} else {
-		log.Warn("Limit for resource ", resource, " is not supported")
+func getLimit(resource string, limits []types.LimitExport) float64 {
+
+	for _, limit := range limits {
+		if limit.Name == resource {
+			return limit.Limit
+		}
 	}
+
+	//on purpose limit not necessarily applicable
+	log.Debug("Limit for resource ", resource, " is not specified")
 	return -1.0
 }
 
@@ -315,7 +343,6 @@ func RunRegression(container string, resource string, measuredPredictors []types
 
 	//floatData is the raw values with both observed[0] and variables[1..n]
 	floatData := make([][]float64, len(measuredUsage.(model.Matrix)[0].Values))
-	log.Info("Regression for resource: ", resource, ", container: ", container, ", N: ", len(floatData))
 	for i, obs := range measuredUsage.(model.Matrix)[0].Values {
 		//floatDataLine is the raw Line values with both observed[0] and variables[1..n]
 		floatDataLine := make([]float64, len(measuredPredictors)+1)
@@ -372,10 +399,10 @@ func RunRegression(container string, resource string, measuredPredictors []types
 
 //measure helpers
 func MeasurePredictors(resource string, promURL string, maxRoi time.Duration, interval time.Duration, preds []types.Predictor, vars []types.Var) []types.PredictorMeasurement {
-	log.Info("=> Measure ", resource, " predictors")
+	log.Debug("=> Measure ", resource, " predictors")
 	var result []types.PredictorMeasurement
 	for _, pred := range preds {
-		log.Info("==> Measure ", resource, " predictor ", pred.Name)
+		log.Debug("==> Measure ", resource, " predictor ", pred.Name)
 		query := SubstitueVars(pred.Query, vars, interval)
 		data := QueryRange(promURL, query, maxRoi, interval)
 		if data != nil {
@@ -387,14 +414,14 @@ func MeasurePredictors(resource string, promURL string, maxRoi time.Duration, in
 }
 
 func MeasureUsage(resource string, promURL string, maxRoi time.Duration, interval time.Duration, query string, vars []types.Var) model.Value {
-	log.Info("===> Measure ", resource, " usage")
+	log.Debug("===> Measure ", resource, " usage")
 	query = SubstitueVars(query, vars, interval)
 	data := QueryRange(promURL, query, maxRoi, interval)
 	return data
 }
 
 func MeasureControl(promURL string, query string, vars []types.Var, interval time.Duration) model.Value {
-	log.Info("===> Measure control")
+	log.Debug("===> Measure control")
 	query = SubstitueVars(query, vars, interval)
 	data := QueryInstant(promURL, query)
 	return data
@@ -406,7 +433,7 @@ func QueryRange(promURL string, query string, start time.Duration, step time.Dur
 	if err != nil {
 		log.Error("PromQL query range wrong for ", query)
 	} else {
-		log.Info("Sucessful query range : ", query)
+		log.Debug("Sucessful query range : ", query)
 	}
 	return data
 }
@@ -444,7 +471,7 @@ func FindContainerName(pred types.PredictorVarQueries) string {
 	}
 
 	log.Error("Could not find the container name in predictors.json for predictor ", pred)
-	return "nil"
+	return ""
 }
 
 func FindObserved(resPred string, observedVars []types.ObservedVarQueries) types.ObservedVarQueries {
@@ -458,15 +485,49 @@ func FindObserved(resPred string, observedVars []types.ObservedVarQueries) types
 	return types.ObservedVarQueries{Query: "N/A", Unit: "N/A"}
 }
 
-func FindControlQuery(name string, controlVars []types.ControlVarQueries) string {
-	for _, control := range controlVars {
-		if control.Name == name {
-			return control.Query
+func FindLimitQuery(name string, limitVars []types.LimitVarQueries) string {
+	for _, limit := range limitVars {
+		if limit.Name == name {
+			return limit.Query
 		}
 	}
 
-	log.Error("Could not find the query in control.json for control ", name)
-	return "nil"
+	//on purpose limit is optional
+	log.Debug("Could not find the query in limit.json for ", name)
+	return ""
+}
+
+func FindLimitUnit(name string, limitVars []types.LimitVarQueries) string {
+	for _, limit := range limitVars {
+		if limit.Name == name {
+			return limit.Unit
+		}
+	}
+
+	log.Error("Could not find the unit in limit.json for ", name)
+	return ""
+}
+
+func FindInfoQuery(name string, infoVars []types.InfoVarQueries) string {
+	for _, info := range infoVars {
+		if info.Name == name {
+			return info.Query
+		}
+	}
+
+	log.Error("Could not find the query in info.json for ", name)
+	return ""
+}
+
+func FindInfoLabel(name string, infoVars []types.InfoVarQueries) string {
+	for _, info := range infoVars {
+		if info.Name == name {
+			return info.Label
+		}
+	}
+
+	log.Error("Could not find the label in info.json for ", name)
+	return ""
 }
 
 func ExportResultToJson(reg types.RegressionExport) {

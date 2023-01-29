@@ -5,3 +5,25 @@
 - name: mem
   unit: Mi
   query: sum (container_memory_working_set_bytes{container=~"$container"})/(1024*1024)
+- name: storage_usage
+  unit: MiB
+  query: sum(container_fs_usage_bytes{id="/"} + on (device) group_right() container_fs_usage_bytes{container=~"$container"}*0)/(1024*1024)
+- name: storage_thr_R
+  unit: MB/s
+  query: sum (rate (container_fs_reads_bytes_total{container=~"$container"}[$interval]))/(1000*1000)
+- name: storage_thr_W
+  unit: MB/s
+  query: sum (rate (container_fs_writes_bytes_total{container=~"$container"}[$interval]))/(1000*1000)
+- name: storage_iops_R
+  unit: IOPS
+  query: irate(container_fs_reads_total{id="/"}[$interval]) + on (device) group_right() container_fs_reads_total{container=~"$container"}*0
+- name: storage_iops_W
+  unit: IOPS
+  query: irate(container_fs_writes_total{id="/"}[$interval]) + on (device) group_right() container_fs_writes_total{container=~"$container"}*0
+- name: network_in
+  unit: KB/s
+  query: sum (rate (container_network_receive_bytes_total{container=~"$container"}[$interval]))/1000
+- name: network_out
+  unit: KB/s
+  query: sum (rate (container_network_transmit_bytes_total{container=~"$container"}[$interval]))/1000
+

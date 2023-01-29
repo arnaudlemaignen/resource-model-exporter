@@ -12,4 +12,12 @@
     predictors:
     - name: image_pixels_M
       query: sum(res_control_measurement_pixels{job="resource-control-sample"}) / 1000000
+  - name: storage_usage
+    predictors:
+    - name: image_pixels_M
+      query: sum(res_control_measurement_pixels{job="resource-control-sample"}) / 1000000
+  - name: storage_iops_W
+    predictors:
+    - name: image_pixels_M
+      query: sum(res_control_measurement_pixels{job="resource-control-sample"}) / 1000000
       

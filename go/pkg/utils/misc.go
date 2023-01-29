@@ -1,9 +1,10 @@
 package utils
 
 import (
-	"resource-model-exporter/pkg/types"
-	"os"
 	"io/ioutil"
+	"os"
+	"resource-model-exporter/pkg/types"
+
 	"gopkg.in/yaml.v2"
 
 	log "github.com/sirupsen/logrus"
@@ -60,16 +61,31 @@ func OpenObserved(filename string) []types.ObservedVarQueries {
 	return result
 }
 
-func OpenControl(filename string) []types.ControlVarQueries {
+func OpenInfo(filename string) []types.InfoVarQueries {
 	byteValue := ReadFile(filename)
-	var result []types.ControlVarQueries
+	var result []types.InfoVarQueries
 	yaml.Unmarshal(byteValue, &result)
 	if len(result) == 0 {
 		log.Error(filename, " is empty or not well formated")
 	}
 	for i := 0; i < len(result); i++ {
-		log.Debug("Control Name: " + result[i].Name)
-		log.Debug("Control Query: " + result[i].Query)
+		log.Debug("Info Name: " + result[i].Name)
+		log.Debug("Info Query: " + result[i].Query)
+	}
+	return result
+}
+
+func OpenLimits(filename string) []types.LimitVarQueries {
+	byteValue := ReadFile(filename)
+	var result []types.LimitVarQueries
+	yaml.Unmarshal(byteValue, &result)
+	if len(result) == 0 {
+		log.Error(filename, " is empty or not well formated")
+	}
+	for i := 0; i < len(result); i++ {
+		log.Debug("Resource Name: " + result[i].Name)
+		log.Debug("Resource Unit: " + result[i].Unit)
+		log.Debug("Resource Query: " + result[i].Query)
 	}
 	return result
 }
