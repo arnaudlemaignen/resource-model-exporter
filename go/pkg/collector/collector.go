@@ -49,7 +49,7 @@ var (
 	metricModelCoeffs = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "regression_coeff"),
 		"Resource model regression coeff for the last ROI",
-		[]string{"container", "resource", "coeff_name", "coeff_alias"}, nil,
+		[]string{"container", "resource", "coeff_name", "coeff_alias", "coeff_degree"}, nil,
 	)
 
 	metricModelR2 = prometheus.NewDesc(
@@ -70,24 +70,27 @@ var (
 )
 
 type Exporter struct {
-	promURL, version string
-	maxRoi, interval time.Duration
-	predictors       []types.PredictorVarQueries
-	observed         []types.ObservedVarQueries
-	info             []types.InfoVarQueries
-	limits           []types.LimitVarQueries
+	promURL, version, outReg string
+	maxRoi, interval         time.Duration
+	predictors               []types.PredictorVarQueries
+	observed                 []types.ObservedVarQueries
+	info                     []types.InfoVarQueries
+	limits                   []types.LimitVarQueries
+	regs                     []types.ContainerReg
 }
 
-func NewExporter(promURL string, version string, maxRoi time.Duration, interval time.Duration, predictors []types.PredictorVarQueries, observed []types.ObservedVarQueries, info []types.InfoVarQueries, limits []types.LimitVarQueries) *Exporter {
+func NewExporter(promURL, version, outReg string, maxRoi time.Duration, interval time.Duration, predictors []types.PredictorVarQueries, observed []types.ObservedVarQueries, info []types.InfoVarQueries, limits []types.LimitVarQueries, regs []types.ContainerReg) *Exporter {
 	return &Exporter{
 		promURL:    promURL,
 		version:    version,
+		outReg:     outReg,
 		maxRoi:     maxRoi,
 		interval:   interval,
 		predictors: predictors,
 		observed:   observed,
 		info:       info,
 		limits:     limits,
+		regs:       regs,
 	}
 }
 

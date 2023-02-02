@@ -1,9 +1,7 @@
 package collector
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"os"
+	"math"
 	"regexp"
 	"resource-model-exporter/pkg/types"
 	"resource-model-exporter/pkg/utils"
@@ -16,6 +14,11 @@ import (
 	"github.com/prometheus/common/model"
 	"github.com/sajari/regression"
 	log "github.com/sirupsen/logrus"
+	"gonum.org/v1/gonum/stat"
+)
+
+var (
+	maxSupportedDegrees = 4
 )
 
 func (e *Exporter) CollectPromMetrics(ch chan<- prometheus.Metric) {
@@ -39,30 +42,70 @@ func (e *Exporter) HitProm(ch chan<- prometheus.Metric) {
 		container := FindContainerName(pred)
 		log.Info("Begin measurement of : ", container)
 		conf := e.MeasureResourceConfig(ch, container, pred.Vars)
-		limits := e.MeasureResourceLimit(ch, container, pred)
 
 		validMeasurements := 0
 		//For any resources in the predictors yaml (CPU/Mem,Storage, IOPS...)
 		for _, resPred := range pred.Resources {
-			//TODO find where we spend time
-			// var timings []Timing
 			observed := FindObserved(resPred.Name, e.observed)
-
-			isValid, m := e.MeasureResource(container, resPred.Name, resPred.Predictor, observed.Query, limits, pred.Vars)
+			limit := e.MeasureResourceLimit(ch, container, resPred.Name, pred.Vars)
+			isValid, m := e.MeasureResource(container, resPred.Name, resPred.Predictor, observed.Query, limit, pred.Vars)
 			//regression
 			if isValid {
+				N := len(m.Usage.(model.Matrix)[0].Values)
 				log.Info("====> Regression for ", container, " ", resPred.Name)
-				r := RunRegression(container, resPred.Name, m.Predictors, m.Usage)
-				log.Info("Formula : ", r.Formula)
-				log.Info("R² : ", r.R2, ", Var. Observed : ", r.Varianceobserved, ", Var. Predictors : ", r.VariancePredicted, ", N : ", len(m.Usage.(model.Matrix)[0].Values))
+				r := RunRegressionMLR(container, resPred.Name, m.Predictors, m.Usage)
+				log.Info("Formula : ", strings.Replace(r.Formula, "Predicted = ", "", -1))
+				//R2: A metric that tells us the proportion of the variance in the response variable of a regression model that can be explained by the predictor variables. This value ranges from 0 to 1. The higher the R2 value, the better a model fits a dataset.
+				log.Info("R² : ", math.Floor(r.R2*10000)/100, " %, Var. Observed : ", r.Varianceobserved, ", Var. Predictors : ", r.VariancePredicted, ", N : ", N)
 				log.Debug("Regression ", r)
 
+				//trial gonum regression to compare
+				//RunRegressionGonum(container, resPred.Name, m.Predictors, m.Usage)
+
+				//TODO maybe to use long short-term memory (LSTM) network models
+				//supposed to be better than MLR (see https://www.sciencedirect.com/science/article/pii/S092523122031167X)
+				//https://github.com/owulveryck/lstm
+				//https://subscription.packtpub.com/book/data/9781789340990/7/ch07lvl1sec32/building-an-lstm-in-gorgonia
+				//or multivariate gradient descent
+				//https://nulab.com/learn/software-development/gradient-descent-linear-regression-using-golang/
+				//https://github.com/mogaleaf/go-linear-gradient
+				//https://gorgonia.org/tutorials/iris/
+				// or random forest
+				//better than MLR (see https://iopscience.iop.org/article/10.1088/1742-6596/1631/1/012153/pdf)
+				//https://github.com/fxsjy/RF.go
+
+				//Multi layer perceptron
+				//https://www.researchgate.net/publication/317418047_Utilization_based_prediction_model_for_resource_provisioning
+				//https://github.com/Agurato/goceptron
+				//https://madeddu.xyz/posts/neuralnetwork/
+				//https://medium.com/@kidtronnix/making-a-neural-network-from-scratch-using-go-2bfd4dafce9c
+				//https://github.com/cdipaolo/goml/tree/master/perceptron
+
+				//most promissing framework
+				//https://github.com/cdipaolo/goml
+				//https://github.com/gorgonia/gorgonia
+
+				//https://www.freecodecamp.org/news/learn-how-to-select-the-best-performing-linear-regression-for-univariate-models-e9d429c40581/
+				//Only compare linear models for the same dataset.
+				//Find a model with a high adjusted R2
+				//Make sure this model has equally distributed residuals around zero
+				//Make sure the errors of this model are within a small bandwidth
+
+				/* 				var bestSoFarPred types.Container
+				   				for _, containerBest := range *containersBest {
+				   					if containerBest.Name == container {
+				   						bestSoFar = containerBest
+				   					}
+				   				} */
+				//oldBestSoFarReg := findBestSoFar(containersBest, container, resPred.Name)
+				/* 				newBestSoFarReg := calculateNewBestSoFar(container, resPred.Name, r, N, len(m.Predictors), observed.Unit,
+				types.InfoReg{Image: conf.ImageVersion, CpuModel: conf.CpuModel, NodeType: conf.NodeType, ROI: e.maxRoi.String(), LastUpdated: time.Now().Format("2006-01-02 15:04:05")}, containersBest)
+				*/
+				newBestSoFarReg := e.UpdateOutReg(container, resPred.Name, r, N, len(m.Predictors), limit, observed.Unit,
+					types.InfoReg{Image: conf.ImageVersion, CpuModel: conf.CpuModel, NodeType: conf.NodeType, ROI: e.maxRoi.String(), LastUpdated: time.Now().Format("2006-01-02 15:04:05")})
 				//create prom metrics
-				e.CreatePromMetrics(ch, container, resPred.Name, observed.Unit, m, r)
-				//export data
-				ExportResultToJson(types.RegressionExport{Round: round, Container: container, Resource: resPred.Name, ImageVersion: conf.ImageVersion, CpuModel: conf.CpuModel, NodeType: conf.NodeType,
-					Regression: types.Reg{Formula: r.Formula, Unit: observed.Unit, Limits: limits,
-						R2: r.R2, VarianceObserved: r.Varianceobserved, VariancePredictors: r.VariancePredicted}})
+				e.CreatePromMetrics(ch, container, resPred.Name, observed.Unit, m, newBestSoFarReg)
+
 				validMeasurements++
 			}
 		}
@@ -70,13 +113,97 @@ func (e *Exporter) HitProm(ch chan<- prometheus.Metric) {
 	}
 }
 
-func (e *Exporter) MeasureResource(container string, resource string, preds []types.Predictor, measuredQuery string, limits []types.LimitExport, vars []types.Var) (bool, types.Measurement) {
+func (e *Exporter) findContainerReg(container string) (int, types.ContainerReg) {
+	for i, containerReg := range e.regs {
+		if containerReg.Name == container {
+			return i, containerReg
+		}
+	}
+	//Not found we will create and return
+	containerReg := types.ContainerReg{}
+	e.regs = append(e.regs, containerReg)
+
+	return len(e.regs) - 1, containerReg
+}
+
+func (e *Exporter) findResReg(indexContReg int, resource string) (int, types.ResReg) {
+	for i, resReg := range e.regs[indexContReg].Reg {
+		if resReg.Name == resource {
+			return i, resReg
+		}
+	}
+	//Not found we will create and return
+	resReg := types.ResReg{}
+	e.regs[indexContReg].Reg = append(e.regs[indexContReg].Reg, resReg)
+
+	return len(e.regs[indexContReg].Reg) - 1, resReg
+}
+
+func (e *Exporter) UpdateOutReg(container string, resource string, r *regression.Regression, N int, preds int, limit float64, unit string, info types.InfoReg) types.ResReg {
+	indexContReg, _ := e.findContainerReg(container)
+	indexResReg, resReg := e.findResReg(indexContReg, resource)
+
+	success, newResReg := e.UpdateEventuallyResReg(container, resource, r, N, preds, limit, unit, resReg)
+	if success {
+		e.regs[indexContReg].Name = container
+		e.regs[indexContReg].Info = info
+		e.regs[indexContReg].Reg[indexResReg] = newResReg
+		types.WriteBestSoFarRegFromYaml(e.outReg, e.regs)
+	}
+
+	return resReg
+}
+
+func (e *Exporter) UpdateEventuallyResReg(container string, predictor string, r *regression.Regression, N int, preds int, limit float64, unit string, bestSoFar types.ResReg) (bool, types.ResReg) {
+	if r.R2 > bestSoFar.R2 {
+		log.Info("New best so far regression ", math.Floor(r.R2*10000)/100, " % | previous was ", math.Floor(bestSoFar.R2*10000)/100, " %")
+		//update reg
+		bestSoFar.Name = predictor
+		bestSoFar.R2 = r.R2
+		bestSoFar.Formula = strings.Replace(r.Formula, "Predicted = ", "", -1)
+		bestSoFar.Unit = unit
+		bestSoFar.VarianceObs = r.Varianceobserved
+		bestSoFar.VariancePred = r.VariancePredicted
+		bestSoFar.Limit = limit
+		bestSoFar.N = N
+		bestSoFar.Offset = r.GetCoeffs()[0]
+		//prepare the dynamic
+		bestSoFar.PredictorCoeffs = make([]types.PredictorCoeff, preds)
+		for i := 0; i < len(bestSoFar.PredictorCoeffs); i++ {
+			bestSoFar.PredictorCoeffs[i].Coeffs = make([]float64, maxSupportedDegrees)
+		}
+		mapPredIndices := make(map[string]int)
+
+		// Model Regression Coeff metrics
+		for i, coeff := range r.GetCoeffs() {
+			if i > 0 {
+				//GetVar() contains the alias of the pred with the cross info => image_pixels_M | (image_pixels_M)^2 | (image_pixels_M)^3
+				predAlias, degree := getPredCoeffs(r.GetVar(i - 1))
+
+				index := len(mapPredIndices)
+				_, exists := mapPredIndices[predAlias]
+				if exists {
+					index = mapPredIndices[predAlias]
+				} else {
+					mapPredIndices[predAlias] = index
+				}
+
+				bestSoFar.PredictorCoeffs[index].Name = predAlias
+				bestSoFar.PredictorCoeffs[index].Coeffs[degree-1] = coeff
+			}
+		}
+		return true, bestSoFar
+	}
+	return false, bestSoFar
+}
+
+func (e *Exporter) MeasureResource(container string, resource string, preds []types.Predictor, measuredQuery string, limit float64, vars []types.Var) (bool, types.Measurement) {
 	//measure predictors vars (dimensioning inputs)
 	measuredPredictors := MeasurePredictors(resource, e.promURL, e.maxRoi, e.interval, preds, vars)
 	//measure measured vars (resource usage)
 	measuredUsage := MeasureUsage(resource, e.promURL, e.maxRoi, e.interval, measuredQuery, vars)
 
-	isValid := e.ValidateMeasurement(container, resource, measuredPredictors, measuredUsage, limits)
+	isValid := e.ValidateMeasurement(container, resource, measuredPredictors, measuredUsage, limit)
 	var m types.Measurement
 	m.Predictors = measuredPredictors
 	m.Usage = measuredUsage
@@ -105,58 +232,59 @@ func (e *Exporter) MeasureResourceConfig(ch chan<- prometheus.Metric, container 
 	return c
 }
 
-func (e *Exporter) MeasureResourceLimit(ch chan<- prometheus.Metric, container string, pred types.PredictorVarQueries) []types.LimitExport {
+func (e *Exporter) MeasureResourceLimit(ch chan<- prometheus.Metric, container string, res string, vars []types.Var) float64 {
 	//get the CPU/Mem limits to check we are under... use instant query (no need for historical)
-	var c []types.LimitExport
+	limit := -1.0
 
-	for _, resPred := range pred.Resources {
-		query := FindLimitQuery(resPred.Name, e.limits)
-		if query != "" {
-			limit := GetValue(MeasureControl(e.promURL, query, pred.Vars, e.interval))
-			unit := FindLimitUnit(resPred.Name, e.limits)
-			c = append(c, types.LimitExport{Name: resPred.Name, Unit: unit, Limit: limit})
-			ch <- prometheus.MustNewConstMetric(
-				metricLimit, prometheus.GaugeValue, limit, container, resPred.Name, unit,
-			)
-		}
+	query := FindLimitQuery(res, e.limits)
+	if query != "" {
+		limit = GetValue(MeasureControl(e.promURL, query, vars, e.interval))
+		unit := FindLimitUnit(res, e.limits)
+
+		ch <- prometheus.MustNewConstMetric(
+			metricLimit, prometheus.GaugeValue, limit, container, res, unit,
+		)
 	}
 
-	return c
+	return limit
 }
 
-func (e *Exporter) CreatePromMetrics(ch chan<- prometheus.Metric, container string, resource string, unit string, measurement types.Measurement, r *regression.Regression) {
+func (e *Exporter) CreatePromMetrics(ch chan<- prometheus.Metric, container string, resource string, unit string, measurement types.Measurement, reg types.ResReg) {
 	measuredPredictors := measurement.Predictors
 	measuredObserved := measurement.Usage
 	//last value of the observed or Pred (same size)
 	lastValueIndex := len(measuredObserved.(model.Matrix)[0].Values) - 1
+
+	//Offset
+	ch <- prometheus.MustNewConstMetric(
+		metricModelCoeffs, prometheus.GaugeValue, reg.Offset, container, resource, "offset", "offset", "0",
+	)
+
 	// Model Regression Coeff metrics
-	for i, coeff := range r.GetCoeffs() {
-		if i == 0 {
+	for i, pred := range reg.PredictorCoeffs {
+		//degree is starting at 1
+		for degree, coeff := range pred.Coeffs {
 			ch <- prometheus.MustNewConstMetric(
-				metricModelCoeffs, prometheus.GaugeValue, coeff, container, resource, "offset", "offset",
-			)
-		} else {
-			ch <- prometheus.MustNewConstMetric(
-				metricModelCoeffs, prometheus.GaugeValue, coeff, container, resource, "predictor_"+strconv.Itoa(i-1), r.GetVar(i-1),
+				metricModelCoeffs, prometheus.GaugeValue, coeff, container, resource, "predictor_"+strconv.Itoa(i), pred.Name, strconv.Itoa(degree+1),
 			)
 		}
 	}
 
 	ch <- prometheus.MustNewConstMetric(
-		metricModelR2, prometheus.GaugeValue, r.R2, container, resource, r.Formula,
+		metricModelR2, prometheus.GaugeValue, reg.R2, container, resource, reg.Formula,
 	)
 
 	ch <- prometheus.MustNewConstMetric(
-		metricModelVariance, prometheus.GaugeValue, r.Varianceobserved, container, resource, "observed",
+		metricModelVariance, prometheus.GaugeValue, reg.VarianceObs, container, resource, "observed",
 	)
 
 	ch <- prometheus.MustNewConstMetric(
-		metricModelVariance, prometheus.GaugeValue, r.VariancePredicted, container, resource, "predicted",
+		metricModelVariance, prometheus.GaugeValue, reg.VariancePred, container, resource, "predicted",
 	)
 
 	//Add number of values
 	ch <- prometheus.MustNewConstMetric(
-		metricModelN, prometheus.GaugeValue, float64(len(measuredPredictors[0].Values.(model.Matrix)[0].Values)), container, resource,
+		metricModelN, prometheus.GaugeValue, float64(reg.N), container, resource,
 	)
 
 	//Add last usage value
@@ -174,26 +302,63 @@ func (e *Exporter) CreatePromMetrics(ch chan<- prometheus.Metric, container stri
 		)
 	}
 
-	//Calulate Prediction
-	prediction, err := r.Predict(floatLastPredictorValues)
+	//Calculate Prediction
+	prediction, err := Predict(reg, floatLastPredictorValues)
 	if err == nil {
 		ch <- prometheus.MustNewConstMetric(
-			metricPrediction, prometheus.GaugeValue, prediction, container, resource, unit, r.Formula,
+			metricPrediction, prometheus.GaugeValue, prediction, container, resource, unit, reg.Formula,
 		)
 	} else {
 		log.Warn("Prediction was not successful for container ", container, " resource ", resource, " err ", err)
 	}
+}
 
+func Predict(reg types.ResReg, floatLastPredictorValues []float64) (float64, error) {
+	sum := float64(reg.Offset)
+	for i, pred := range reg.PredictorCoeffs {
+		//degree is starting at 1
+		for degree, coeff := range pred.Coeffs {
+			sum += coeff * math.Pow(floatLastPredictorValues[i], float64(degree+1))
+		}
+	}
+
+	return sum, nil
+}
+
+func getPredCoeffs(coeffName string) (string, int) {
+	//Find the right coeff and degree
+	//GetVar() contains the alias of the pred with the cross info => image_pixels_M | (image_pixels_M)^2 | (image_pixels_M)^3
+	predAlias := "NA"
+	degree := 0
+	if strings.Contains(coeffName, "(") && strings.Contains(coeffName, ")^") {
+		coeffNameClean := coeffName[strings.LastIndex(coeffName, "(")+1 : strings.LastIndex(coeffName, ")^")]
+		predAlias = coeffNameClean
+		degree, _ = strconv.Atoi(coeffName[strings.LastIndex(coeffName, ")^")+2:])
+	} else {
+		predAlias = coeffName
+		degree = 1
+	}
+
+	return predAlias, degree
+}
+
+func predictorsToMap(measuredPredictors []types.PredictorMeasurement) map[string]string {
+	result := make(map[string]string)
+
+	for j, pred := range measuredPredictors {
+		result[pred.Predictor] = "predictor_" + strconv.Itoa(j)
+	}
+
+	return result
 }
 
 //MEASUREMENTS
-func (e *Exporter) ValidateMeasurement(container string, resource string, measuredPredictors []types.PredictorMeasurement, measuredUsage model.Value, limits []types.LimitExport) bool {
+func (e *Exporter) ValidateMeasurement(container string, resource string, measuredPredictors []types.PredictorMeasurement, measuredUsage model.Value, limit float64) bool {
 	//validate that there is the same number of measurements for predictors and observed
 	//validate measurement based on limits
 	//if no kubestate => assume no limit, resources are not bounded
 	maxValidResourceUsageThreshold := 0.9 //90%
 	//validate the size of measures
-	// log.Info("measuredUsage ", measuredUsage)
 
 	//check that there is at least 1 and only 1 serie returning
 	if len(measuredUsage.(model.Matrix)) != 1 {
@@ -232,7 +397,6 @@ func (e *Exporter) ValidateMeasurement(container string, resource string, measur
 	last := measuredUsage.(model.Matrix)[0].Values[len(measuredUsage.(model.Matrix)[0].Values)-1].Timestamp
 	log.Info("Measurement ROI : to measure ", e.maxRoi, ", measured ", model.Time.Sub(last, first), ", Now - measured ", model.Now().Sub(first))
 
-	limit := getLimit(resource, limits)
 	//validate that the observed measures where not exceeding 90% of limit
 	if limit > 0 {
 		//find max resource MeasureUsage
@@ -278,10 +442,8 @@ func alignObsPredMeasurements(measuredUsage []model.SamplePair, measuredPredicto
 		}
 	}
 
-	log.Info("Observed and Predictors slices aligned in ", time.Since(start))
-
 	if len(newMeasuredUsage) == len(newMeasuredPredictor) && len(newMeasuredUsage) > 0 {
-		log.Info("Alignment Success : Observed Size is ", len(newMeasuredUsage))
+		log.Debug("Alignment Success : Observed Size is ", len(newMeasuredUsage), ", aligned in ", time.Since(start))
 		return true, newMeasuredUsage, newMeasuredPredictor
 	} else {
 		log.Warn("Alignment Failed : Observed Size is ", len(newMeasuredUsage), ", Predictor size is ", len(newMeasuredPredictor), ", the regression will be skipped")
@@ -301,19 +463,6 @@ func areAligned(a, b model.Time) bool {
 	}
 }
 
-func getLimit(resource string, limits []types.LimitExport) float64 {
-
-	for _, limit := range limits {
-		if limit.Name == resource {
-			return limit.Limit
-		}
-	}
-
-	//on purpose limit not necessarily applicable
-	log.Debug("Limit for resource ", resource, " is not specified")
-	return -1.0
-}
-
 func findMax(promValues model.Value) float64 {
 	max := 0.0
 	for i, e := range promValues.(model.Matrix)[0].Values {
@@ -321,24 +470,27 @@ func findMax(promValues model.Value) float64 {
 			max = float64(e.Value)
 		}
 	}
-	// for i, e := range promValues.(model.Matrix) {
-	// 	if i == 0 || float64(e.Value) > max {
-	// 		max = float64(e.Value)
-	// 	}
-	// }
 	return max
 }
 
-//regression helper
+//Mulitple Linear Regression (MLR) using Least Squares
 //see github.com/sajari/regression doc
-//see github.com/haarts/regression
-func RunRegression(container string, resource string, measuredPredictors []types.PredictorMeasurement, measuredUsage model.Value) *regression.Regression {
+func RunRegressionMLR(container string, resource string, measuredPredictors []types.PredictorMeasurement, measuredUsage model.Value) *regression.Regression {
 	r := new(regression.Regression)
 	r.SetObserved("Resource model for container " + container + " resource " + resource + "\n")
 	//Setup predictor names
-	// var dataPoints []regression.DataPoint
 	for i := 0; i < len(measuredPredictors); i++ {
 		r.SetVar(i, measuredPredictors[i].Predictor)
+
+		// Feature cross based on computing the power of an input.
+		// It also exists MultiplierCross(0, 1, 3)
+		// Feature cross based on the multiplication of multiple inputs.
+		for _, degree := range measuredPredictors[i].PolynomialDegrees {
+			//by default degree 0 and 1 included
+			if degree > 1 {
+				r.AddCross(regression.PowCross(i, float64(degree)))
+			}
+		}
 	}
 
 	//floatData is the raw values with both observed[0] and variables[1..n]
@@ -353,15 +505,8 @@ func RunRegression(container string, resource string, measuredPredictors []types
 
 			floatDataLine[j+1] = float64(predValues[i].Value)
 		}
-		// floatDataLine[i] = float64(obs.Value)
-		// for j, pred := range measuredPredictors {
-		// 	floatDataLine[j+1] = float64(pred.Values.(model.Vector)[i].Value)
-		// }
-		// floatData = append(floatData, floatDataLine)
 		floatData[i] = floatDataLine
-		// log.Info("len floatData ", len(floatData))
 	}
-
 	//observed is the first cols
 	r.Train(regression.MakeDataPoints(floatData, 0)...)
 	r.Run()
@@ -369,33 +514,24 @@ func RunRegression(container string, resource string, measuredPredictors []types
 	return r
 }
 
-//TO REMOVE
-//see github.com/haarts/regression
-// 	//Setup values
-// 	var d *regression.dataPoint
-//
-// 	// d.Variables = make([]float64, len(measuredPredictors)-1)
-// 	// for i := 0; i < len(measuredPredictors); i++ {
-// 	// 	vectorVal := measuredPredictors[i].Values
-// 	// 	floatData := make([]float64, len(vectorVal))
-// 	// 	for j := 0; j < len(vectorVal); j++ {
-// 	// 		floatData[j] = float64(vectorVal[j].Value)
-// 	// 	}
-// 	// 	d.Variables[i] = floatData
-// 	// }
-// 	//
-// 	// floatData := make([]float64, len(measuredUsage))
-// 	// for j := 0; j < len(measuredUsage); j++ {
-// 	// 	floatData[j] = float64(measuredUsage[j].Value)
-// 	// }
-// 	// d.Observed = floatData
-//
-// 	//Train
-// 	r.Train(d)
-// 	r.Run()
-//
-// 	return r
-// }
+//regression based on Gonum
+func RunRegressionGonum(container string, resource string, measuredPredictors []types.PredictorMeasurement, measuredUsage model.Value) {
+	log.Info("Regression GONUM")
+	origin := false
+	var weights []float64
+	xs := make([]float64, len(measuredUsage.(model.Matrix)[0].Values))
+	ys := make([]float64, len(measuredUsage.(model.Matrix)[0].Values))
+
+	for i, obs := range measuredUsage.(model.Matrix)[0].Values {
+		ys[i] = float64(obs.Value)
+		xs[i] = float64(measuredPredictors[0].Values.(model.Matrix)[0].Values[i].Value)
+	}
+
+	alpha, beta := stat.LinearRegression(xs, ys, weights, origin)
+	r2 := stat.RSquared(xs, ys, weights, alpha, beta)
+	log.Info("Formula : Predicted = ", alpha, " + image_pixels_M*", beta)
+	log.Info("R² : ", math.Floor(r2*10000)/100, " %")
+}
 
 //measure helpers
 func MeasurePredictors(resource string, promURL string, maxRoi time.Duration, interval time.Duration, preds []types.Predictor, vars []types.Var) []types.PredictorMeasurement {
@@ -406,7 +542,7 @@ func MeasurePredictors(resource string, promURL string, maxRoi time.Duration, in
 		query := SubstitueVars(pred.Query, vars, interval)
 		data := QueryRange(promURL, query, maxRoi, interval)
 		if data != nil {
-			result = append(result, types.PredictorMeasurement{Predictor: pred.Name, Values: data})
+			result = append(result, types.PredictorMeasurement{Predictor: pred.Name, PolynomialDegrees: pred.PolynomialDegrees, Values: data})
 		}
 	}
 
@@ -444,7 +580,7 @@ func QueryInstant(promURL string, query string) model.Value {
 	if err != nil {
 		log.Error("PromQL query wrong for ", query)
 	} else {
-		log.Info("Sucessful query : ", query)
+		log.Debug("Sucessful query : ", query)
 	}
 	return data
 }
@@ -530,36 +666,6 @@ func FindInfoLabel(name string, infoVars []types.InfoVarQueries) string {
 	return ""
 }
 
-func ExportResultToJson(reg types.RegressionExport) {
-	//const EXPORT_PATH = "export/"
-	//TODO maybe have 1 file per Day and clean up to keep only last X days
-	filename := "export.json"
-
-	err := checkFile(filename)
-	if err != nil {
-		log.Error(err)
-	}
-	file, err := ioutil.ReadFile(filename)
-	if err != nil {
-		log.Error(err)
-	}
-
-	//build the Json struct
-	data := []types.RegressionExport{}
-	json.Unmarshal(file, &data)
-	data = append(data, reg)
-
-	// Preparing the data to be marshalled and written.
-	dataBytes, err := json.Marshal(data)
-	if err != nil {
-		log.Error(err)
-	}
-	err = ioutil.WriteFile(filename, dataBytes, 0644)
-	if err != nil {
-		log.Error(err)
-	}
-}
-
 func GetLabel(label string, metric model.Value) string {
 	if len(metric.(model.Vector)) > 0 {
 		vectorVal := metric.(model.Vector)
@@ -575,15 +681,4 @@ func GetValue(metric model.Value) float64 {
 		return float64(metric.(model.Vector)[0].Value)
 	}
 	return -1.0
-}
-
-func checkFile(filename string) error {
-	_, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		_, err := os.Create(filename)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

@@ -41,6 +41,37 @@ func TestSubstitueVars3(t *testing.T) {
 	}
 }
 
+/* func TestGetPredCoeffs(t *testing.T) {
+	mapPred := make(map[string]string)
+	mapPred["image_pixels_M"] = "predictor_0"
+
+	wantPredName := "predictor_0"
+	wantPredAlias := "image_pixels_M"
+	wantDegree := "1"
+	predName, predAlias, degree := getPredCoeffs("image_pixels_M", mapPred)
+	if predName != wantPredName {
+		t.Errorf("TestGetPredCoeffs(predName) = %q, want %q", predName, wantPredName)
+	}
+	if predAlias != wantPredAlias {
+		t.Errorf("TestGetPredCoeffs(predAlias) = %q, want %q", predAlias, wantPredAlias)
+	}
+	if degree != wantDegree {
+		t.Errorf("TestGetPredCoeffs(predName) = %q, want %q", degree, wantDegree)
+	}
+
+	wantDegree = "2"
+	predName, predAlias, degree = getPredCoeffs("(image_pixels_M)^2", mapPred)
+	if predName != wantPredName {
+		t.Errorf("TestGetPredCoeffs(predName 2) = %q, want %q", predName, wantPredName)
+	}
+	if predAlias != wantPredAlias {
+		t.Errorf("TestGetPredCoeffs(predAlias 2) = %q, want %q", predAlias, wantPredAlias)
+	}
+	if degree != wantDegree {
+		t.Errorf("TestGetPredCoeffs(predName 2) = %q, want %q", degree, wantDegree)
+	}
+} */
+
 /* func TestAreAligned(t *testing.T) {
 	//timeInterval, _ := time.DurationOf("5m")
 	want := true

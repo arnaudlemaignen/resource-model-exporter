@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 	"resource-model-exporter/pkg/collector"
-	"resource-model-exporter/pkg/utils"
+	"resource-model-exporter/pkg/types"
 
 	"github.com/joho/godotenv"
 
@@ -16,13 +16,15 @@ import (
 )
 
 var (
-	version           = "v0.01"
-	listenAddress     = flag.String("web.listen-address", ":9901", "Address to listen on for telemetry")
-	metricsPath       = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics")
-	resJsonPredictors = "resources/predictors.yml"
-	resJsonObserved   = "resources/observed.yml"
-	resJsonInfo       = "resources/info.yml"
-	resJsonLimit      = "resources/limits.yml"
+	version          = "v0.01"
+	listenAddress    = flag.String("web.listen-address", ":9901", "Address to listen on for telemetry")
+	metricsPath      = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics")
+	outputDir        = "output/"
+	resYmlPredictors = "resources/predictors.yml"
+	resYmlObserved   = "resources/observed.yml"
+	resYmlInfo       = "resources/info.yml"
+	resYmlLimit      = "resources/limits.yml"
+	outYmlReg        = outputDir + "regressions.yml"
 )
 
 //Readiness message
@@ -47,7 +49,6 @@ func Init() *collector.Exporter {
 	} else {
 		promLogin = promUser + ":" + promPwd
 	}
-
 	maxRoi := os.Getenv("REGRESSION_MAX_ROI")
 	interval := os.Getenv("SAMPLING_INTERVAL")
 
@@ -60,12 +61,13 @@ func Init() *collector.Exporter {
 	log.Info("Max Region Of Interest => ", maxRoi)
 	log.Info("Sampling Interval      => ", interval)
 
+	os.MkdirAll(outputDir, os.ModePerm)
 	//populate services maps
-	predictors := utils.OpenPredictors(resJsonPredictors)
-	observed := utils.OpenObserved(resJsonObserved)
-	info := utils.OpenInfo(resJsonInfo)
-	limits := utils.OpenLimits(resJsonLimit)
-	//TODO validate json
+	predictors := types.OpenPredictors(resYmlPredictors)
+	observed := types.OpenObserved(resYmlObserved)
+	info := types.OpenInfo(resYmlInfo)
+	limits := types.OpenLimits(resYmlLimit)
+	regs := types.OpenRegressions(outYmlReg)
 	//1. check that at least container is provided
 	//2. check that all $vars from dim input factor queries can be reconciled
 
@@ -81,7 +83,7 @@ func Init() *collector.Exporter {
 	}
 
 	//Registering Exporter
-	exporter := collector.NewExporter(promURL, version, timeMaxRoi, timeInterval, predictors, observed, info, limits)
+	exporter := collector.NewExporter(promURL, version, outYmlReg, timeMaxRoi, timeInterval, predictors, observed, info, limits, regs)
 	prometheus.MustRegister(exporter)
 
 	// test()
