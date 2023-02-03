@@ -29,10 +29,6 @@ func (e *Exporter) CollectPromMetrics(ch chan<- prometheus.Metric) {
 	e.HitProm(ch)
 }
 
-// most important godoc
-// https://godoc.org/github.com/prometheus/common/model#Vector
-// https://godoc.org/github.com/prometheus/client_golang/api/prometheus/v1
-
 //Maybe to consider CPU throttling ?
 // container_cpu_cfs_throttled_seconds_total
 // https://itnext.io/k8s-monitor-pod-cpu-and-memory-usage-with-prometheus-28eec6d84729
@@ -40,7 +36,9 @@ func (e *Exporter) HitProm(ch chan<- prometheus.Metric) {
 	for _, pred := range e.predictors {
 		startContainer := time.Now()
 		container := FindContainerName(pred)
-		log.Info("Begin measurement of : ", container)
+		//newine only for easy reading
+		log.Info("")
+		log.Info("=> Begin measurement of : ", container)
 		conf := e.MeasureResourceConfig(ch, container, pred.Vars)
 
 		validMeasurements := 0
@@ -52,7 +50,7 @@ func (e *Exporter) HitProm(ch chan<- prometheus.Metric) {
 			//regression
 			if isValid {
 				N := len(m.Usage.(model.Matrix)[0].Values)
-				log.Info("====> Regression for ", container, " ", resPred.Name)
+				log.Info("==> Regression for ", container, " ", resPred.Name)
 				r := RunRegressionMLR(container, resPred.Name, m.Predictors, m.Usage)
 				log.Info("Formula : ", strings.Replace(r.Formula, "Predicted = ", "", -1))
 				//R2: A metric that tells us the proportion of the variance in the response variable of a regression model that can be explained by the predictor variables. This value ranges from 0 to 1. The higher the R2 value, the better a model fits a dataset.
@@ -91,16 +89,6 @@ func (e *Exporter) HitProm(ch chan<- prometheus.Metric) {
 				//Make sure this model has equally distributed residuals around zero
 				//Make sure the errors of this model are within a small bandwidth
 
-				/* 				var bestSoFarPred types.Container
-				   				for _, containerBest := range *containersBest {
-				   					if containerBest.Name == container {
-				   						bestSoFar = containerBest
-				   					}
-				   				} */
-				//oldBestSoFarReg := findBestSoFar(containersBest, container, resPred.Name)
-				/* 				newBestSoFarReg := calculateNewBestSoFar(container, resPred.Name, r, N, len(m.Predictors), observed.Unit,
-				types.InfoReg{Image: conf.ImageVersion, CpuModel: conf.CpuModel, NodeType: conf.NodeType, ROI: e.maxRoi.String(), LastUpdated: time.Now().Format("2006-01-02 15:04:05")}, containersBest)
-				*/
 				newBestSoFarReg := e.UpdateOutReg(container, resPred.Name, r, N, len(m.Predictors), limit, observed.Unit,
 					types.InfoReg{Image: conf.ImageVersion, CpuModel: conf.CpuModel, NodeType: conf.NodeType, ROI: e.maxRoi.String(), LastUpdated: time.Now().Format("2006-01-02 15:04:05")})
 				//create prom metrics
@@ -109,7 +97,7 @@ func (e *Exporter) HitProm(ch chan<- prometheus.Metric) {
 				validMeasurements++
 			}
 		}
-		log.Info("End measurement of : ", container, " with ", validMeasurements, " valid measures in ", time.Since(startContainer))
+		log.Info("===> End measurement of : ", container, " with ", validMeasurements, " valid measures in ", time.Since(startContainer))
 	}
 }
 
@@ -133,7 +121,7 @@ func (e *Exporter) findResReg(indexContReg int, resource string) (int, types.Res
 		}
 	}
 	//Not found we will create and return
-	resReg := types.ResReg{}
+	resReg := types.ResReg{R2: -1.0, N: -1}
 	e.regs[indexContReg].Reg = append(e.regs[indexContReg].Reg, resReg)
 
 	return len(e.regs[indexContReg].Reg) - 1, resReg
@@ -155,7 +143,7 @@ func (e *Exporter) UpdateOutReg(container string, resource string, r *regression
 }
 
 func (e *Exporter) UpdateEventuallyResReg(container string, predictor string, r *regression.Regression, N int, preds int, limit float64, unit string, bestSoFar types.ResReg) (bool, types.ResReg) {
-	if r.R2 > bestSoFar.R2 {
+	if r.R2 > bestSoFar.R2 && N >= bestSoFar.N {
 		log.Info("New best so far regression ", math.Floor(r.R2*10000)/100, " % | previous was ", math.Floor(bestSoFar.R2*10000)/100, " %")
 		//update reg
 		bestSoFar.Name = predictor
@@ -342,16 +330,6 @@ func getPredCoeffs(coeffName string) (string, int) {
 	return predAlias, degree
 }
 
-func predictorsToMap(measuredPredictors []types.PredictorMeasurement) map[string]string {
-	result := make(map[string]string)
-
-	for j, pred := range measuredPredictors {
-		result[pred.Predictor] = "predictor_" + strconv.Itoa(j)
-	}
-
-	return result
-}
-
 //MEASUREMENTS
 func (e *Exporter) ValidateMeasurement(container string, resource string, measuredPredictors []types.PredictorMeasurement, measuredUsage model.Value, limit float64) bool {
 	//validate that there is the same number of measurements for predictors and observed
@@ -379,7 +357,7 @@ func (e *Exporter) ValidateMeasurement(container string, resource string, measur
 			} else {
 				predictorSize := len(pred.Values.(model.Matrix)[0].Values)
 				if predictorSize != observedSize {
-					log.Info("Observed Size is ", observedSize, " is different from Predictor size ", predictorSize, " for PredictorName ", pred.Predictor, " => Will try to align them")
+					log.Info("Observed Size is ", observedSize, " is different from Predictor size ", predictorSize, " for PredictorName ", pred.Predictor, " : Will align")
 					success, newMeasuredUsage, newMeasuredPredictor := alignObsPredMeasurements(measuredUsage.(model.Matrix)[0].Values, pred.Values.(model.Matrix)[0].Values)
 					if success {
 						measuredUsage.(model.Matrix)[0].Values = newMeasuredUsage
@@ -560,6 +538,7 @@ func MeasureControl(promURL string, query string, vars []types.Var, interval tim
 	log.Debug("===> Measure control")
 	query = SubstitueVars(query, vars, interval)
 	data := QueryInstant(promURL, query)
+
 	return data
 }
 
@@ -606,7 +585,7 @@ func FindContainerName(pred types.PredictorVarQueries) string {
 		}
 	}
 
-	log.Error("Could not find the container name in predictors.json for predictor ", pred)
+	log.Error("Could not find the container name in predictors.yml for predictor ", pred)
 	return ""
 }
 
@@ -617,7 +596,7 @@ func FindObserved(resPred string, observedVars []types.ObservedVarQueries) types
 		}
 	}
 
-	log.Error("Could not find the query in measured.json for resource ", resPred)
+	log.Error("Could not find the query in measured.yml for resource ", resPred)
 	return types.ObservedVarQueries{Query: "N/A", Unit: "N/A"}
 }
 
@@ -629,7 +608,7 @@ func FindLimitQuery(name string, limitVars []types.LimitVarQueries) string {
 	}
 
 	//on purpose limit is optional
-	log.Debug("Could not find the query in limit.json for ", name)
+	log.Debug("Could not find the query in limit.yml for ", name)
 	return ""
 }
 
@@ -640,7 +619,7 @@ func FindLimitUnit(name string, limitVars []types.LimitVarQueries) string {
 		}
 	}
 
-	log.Error("Could not find the unit in limit.json for ", name)
+	log.Error("Could not find the unit in limit.yml for ", name)
 	return ""
 }
 
@@ -651,7 +630,7 @@ func FindInfoQuery(name string, infoVars []types.InfoVarQueries) string {
 		}
 	}
 
-	log.Error("Could not find the query in info.json for ", name)
+	log.Error("Could not find the query in info.yml for ", name)
 	return ""
 }
 
@@ -662,7 +641,7 @@ func FindInfoLabel(name string, infoVars []types.InfoVarQueries) string {
 		}
 	}
 
-	log.Error("Could not find the label in info.json for ", name)
+	log.Error("Could not find the label in info.yml for ", name)
 	return ""
 }
 
@@ -670,7 +649,12 @@ func GetLabel(label string, metric model.Value) string {
 	if len(metric.(model.Vector)) > 0 {
 		vectorVal := metric.(model.Vector)
 		for _, elem := range vectorVal {
-			return string(elem.Metric[model.LabelName(label)])
+			labelValue := elem.Metric[model.LabelName(label)]
+			if len(labelValue) == 0 {
+				return "N/A"
+			} else {
+				return string(labelValue)
+			}
 		}
 	}
 	return ""

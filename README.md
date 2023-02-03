@@ -16,8 +16,8 @@ The Metrics and more information about the measurements are also exported to jso
 
 ## Principles
 
-The name of the game of dimensioning (aka sizing) is to propose the sufficient HW so that an application with a known scope is able to run in good conditions (Application and OS wise) and with an acceptable TCO.
-One of the key aspect is to be able to predict the CPU/Memory/Storage/IOPS footprint on which traditionally some engineering margins are added to find out the HW to procure.
+Dimensioning (aka sizing) is the process of determining the optimal size of a system in terms of its resource requirements and system performance.
+One of the key aspect is to be able to predict the CPU/Memory/Storage/IOPS footprint on which traditionally some engineering margins are added to find out the HW to procure. The name of the game is to have an accurate prediction of the usage so that the engineering margins and/or fudge factors are small in order to have an optimized HW cost.
 
 Most of the time it is rather complex for the developer to know in advance the footprint of his application. And sometimes we are even using application that we did not write. The approach taken here is purely based on experience/measurement. We have a system with multiple containers/applications, we have a dedicated monitoring stack in charge of measuring both inputs and output usage. We want to find out the existing resource model for each of those containers without knowing the code underneath.
 
@@ -25,8 +25,8 @@ The running sequence of the resource model exporter for each container/applicati
 - measure the inputs variables/metrics (predictors) such as qty of transactions, qty of object retained in memory/disk
 - measure the outputs variables/metrics (observed) such as CPU/Memory/Storage/IOPS
 - check that there is no bottleneck achieved on CPU/Memory/Storage/IOPS axis (by checking the container limits, ...)
-- run a linear regression between the predictors and observed variables for a given load
-- expose the resource model as prometheus metrics and JSON ouput
+- run a linear regression (MLR) between the predictors and observed variables for a given load
+- expose the resource model as prometheus metrics and Yaml output
 
 The cherry on the cake is to visualize the delta between the model and the real current usage on a graph
 
@@ -89,10 +89,30 @@ That is supposed to be generic for any container orchestrator based on kubernete
 PROM_ENDPOINT=http://prometheus:9090
 PROMETHEUS_AUTH_USER=admin
 PROMETHEUS_AUTH_PWD=admin
-REGRESSION_MIN_ROI=1d
 REGRESSION_MAX_ROI=7d
 SAMPLING_INTERVAL=5m
 ```
+
+It is currently support up to 4 predictors and 4 polynomial degrees (quartic).
+
+## HOT Reload
+It is essential when modeling to do some try and fail on the predictors or any of the yaml config to improve the R² value.
+As you do not want to restart the application especially when you deployed the resource model exporter as a container, the best is to use the SIGHUP magic !
+
+$ ps auxwww | grep model_exp
+xy       28027  1.8  0.1 1308792 21188 pts/3   Sl+  11:43   0:00 ./resource_model_exporter
+
+$ kill -HUP 28027
+
+Then it will reload the yaml config
+
+WARN[0144] HOT RELOAD
+INFO[0144] Successfully Opened resources/predictors.yml
+INFO[0144] Successfully Opened resources/observed.yml
+INFO[0144] Successfully Opened resources/info.yml
+INFO[0144] Successfully Opened resources/limits.yml
+INFO[0144] Successfully Opened output/regressions.yml
+INFO[0144] Yaml Config Reloaded
 
 ## Install
 

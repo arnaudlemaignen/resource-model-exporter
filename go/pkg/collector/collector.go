@@ -70,27 +70,31 @@ var (
 )
 
 type Exporter struct {
-	promURL, version, outReg string
-	maxRoi, interval         time.Duration
-	predictors               []types.PredictorVarQueries
-	observed                 []types.ObservedVarQueries
-	info                     []types.InfoVarQueries
-	limits                   []types.LimitVarQueries
-	regs                     []types.ContainerReg
+	promURL, version, resPredictors, resObserved, resInfo, resLimit, outReg string
+	maxRoi, interval                                                        time.Duration
+	predictors                                                              []types.PredictorVarQueries
+	observed                                                                []types.ObservedVarQueries
+	info                                                                    []types.InfoVarQueries
+	limits                                                                  []types.LimitVarQueries
+	regs                                                                    []types.ContainerReg
 }
 
-func NewExporter(promURL, version, outReg string, maxRoi time.Duration, interval time.Duration, predictors []types.PredictorVarQueries, observed []types.ObservedVarQueries, info []types.InfoVarQueries, limits []types.LimitVarQueries, regs []types.ContainerReg) *Exporter {
+func NewExporter(promURL, version, resPredictors, resObserved, resInfo, resLimit, outReg string, maxRoi time.Duration, interval time.Duration, predictors []types.PredictorVarQueries, observed []types.ObservedVarQueries, info []types.InfoVarQueries, limits []types.LimitVarQueries, regs []types.ContainerReg) *Exporter {
 	return &Exporter{
-		promURL:    promURL,
-		version:    version,
-		outReg:     outReg,
-		maxRoi:     maxRoi,
-		interval:   interval,
-		predictors: predictors,
-		observed:   observed,
-		info:       info,
-		limits:     limits,
-		regs:       regs,
+		promURL:       promURL,
+		version:       version,
+		resPredictors: resPredictors,
+		resObserved:   resObserved,
+		resInfo:       resInfo,
+		resLimit:      resLimit,
+		outReg:        outReg,
+		maxRoi:        maxRoi,
+		interval:      interval,
+		predictors:    predictors,
+		observed:      observed,
+		info:          info,
+		limits:        limits,
+		regs:          regs,
 	}
 }
 
@@ -113,4 +117,15 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 	log.Info("Collect round ", round, " finished in ", end.Sub(startProm))
 	round++
+}
+
+func (e *Exporter) ReloadYamlConfig() {
+	//Should be mused only for Hot reload of the config
+	e.predictors = types.OpenPredictors(e.resPredictors)
+	e.observed = types.OpenObserved(e.resObserved)
+	e.info = types.OpenInfo(e.resInfo)
+	e.limits = types.OpenLimits(e.resLimit)
+	e.regs = types.OpenRegressions(e.outReg)
+
+	log.Info("Yaml Config Reloaded ")
 }

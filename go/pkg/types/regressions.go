@@ -17,7 +17,7 @@ type ContainerReg struct {
 type InfoReg struct {
 	Image       string `yaml:"image"`
 	CpuModel    string `yaml:"cpu_model"`
-	NodeType    string `yaml:"node_type,omitempty"`
+	NodeType    string `yaml:"node_type"`
 	ROI         string `yaml:"max_roi"`
 	LastUpdated string `yaml:"last_updated"`
 }
@@ -86,6 +86,8 @@ func OpenRegressions(filename string) []ContainerReg {
 	yaml.Unmarshal(byteValue, &containers)
 	if len(containers) == 0 {
 		log.Info(filename, " is empty or not well formated")
+	} else {
+		log.Info("Successfully Opened " + filename)
 	}
 
 	return containers
@@ -96,10 +98,6 @@ func WriteBestSoFarRegFromYaml(filename string, containers []ContainerReg) {
 	if err != nil {
 		log.Error(err)
 	}
-	/* 	file, err := ioutil.ReadFile(filename)
-	   	if err != nil {
-	   		log.Error(err)
-	   	} */
 
 	// Preparing the data to be marshalled and written.
 	dataBytes, err := yaml.Marshal(containers)

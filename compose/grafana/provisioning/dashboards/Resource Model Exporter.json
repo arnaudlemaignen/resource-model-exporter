@@ -25,7 +25,6 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 8,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -70,7 +69,7 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 3,
+        "w": 2,
         "x": 0,
         "y": 1
       },
@@ -105,7 +104,7 @@
           "refId": "A"
         }
       ],
-      "title": "Resource Model Exporter",
+      "title": "Version",
       "type": "stat"
     },
     {
@@ -138,8 +137,8 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 3,
-        "x": 3,
+        "w": 2,
+        "x": 2,
         "y": 1
       },
       "id": 87,
@@ -206,8 +205,8 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 3,
-        "x": 6,
+        "w": 2,
+        "x": 4,
         "y": 1
       },
       "id": 93,
@@ -274,8 +273,77 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 7,
-        "x": 9,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "id": 151,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "name"
+      },
+      "pluginVersion": "9.3.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "res_model_measurement_config{container=~\"$container\"}",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "{{node_type}}",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Node Type",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 6,
+        "x": 12,
         "y": 1
       },
       "id": 45,
@@ -342,8 +410,8 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 8,
-        "x": 16,
+        "w": 6,
+        "x": 18,
         "y": 1
       },
       "id": 50,
@@ -398,7 +466,36 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "Quality of prediction",
+      "description": "",
+      "gridPos": {
+        "h": 1,
+        "w": 6,
+        "x": 0,
+        "y": 4
+      },
+      "id": 118,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "",
+        "mode": "markdown"
+      },
+      "pluginVersion": "9.3.2",
+      "repeat": "resource",
+      "repeatDirection": "h",
+      "title": "$resource",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "Quality of prediction (Best So Far)",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -434,9 +531,9 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 12,
+        "w": 6,
         "x": 0,
-        "y": 4
+        "y": 5
       },
       "id": 4,
       "options": {
@@ -464,15 +561,16 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "exemplar": true,
-          "expr": "max_over_time(max by (resource,container)(res_model_regression_r2{resource=~\"$resource\",container=~\"$container\"})[$__range:])",
-          "instant": false,
+          "exemplar": false,
+          "expr": "max by (resource,container)(res_model_regression_r2{resource=~\"$resource\",container=~\"$container\"})",
+          "instant": true,
           "interval": "",
           "legendFormat": "{{container}}",
+          "range": false,
           "refId": "A"
         }
       ],
-      "title": "R² $resource",
+      "title": "R²",
       "type": "stat"
     },
     {
@@ -513,9 +611,9 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 12,
+        "w": 6,
         "x": 0,
-        "y": 6
+        "y": 7
       },
       "id": 6,
       "options": {
@@ -544,14 +642,14 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "max_over_time(max by (resource,container)(res_model_regression_variance{resource=~\"$resource\",container=~\"$container\",variance_name=\"observed\"})[$__range:])",
+          "expr": "max by (resource,container)(res_model_regression_variance{resource=~\"$resource\",container=~\"$container\",variance_name=\"observed\"})",
           "interval": "",
           "legendFormat": "{{container}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Variance $resource obs",
+      "title": "Variance obs",
       "type": "stat"
     },
     {
@@ -592,9 +690,9 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 12,
+        "w": 6,
         "x": 0,
-        "y": 8
+        "y": 9
       },
       "id": 75,
       "options": {
@@ -622,15 +720,16 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "exemplar": true,
-          "expr": "max_over_time(max by (resource,container)(res_model_regression_variance{resource=~\"$resource\",container=~\"$container\",variance_name=\"predicted\"})[$__range:])",
+          "exemplar": false,
+          "expr": "max by (resource,container)(res_model_regression_variance{resource=~\"$resource\",container=~\"$container\",variance_name=\"predicted\"})",
+          "instant": true,
           "interval": "",
           "legendFormat": "{{container}}",
-          "range": true,
+          "range": false,
           "refId": "A"
         }
       ],
-      "title": "Variance $resource pred",
+      "title": "Variance pred",
       "type": "stat"
     },
     {
@@ -671,9 +770,9 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 12,
+        "w": 6,
         "x": 0,
-        "y": 10
+        "y": 11
       },
       "id": 5,
       "options": {
@@ -700,14 +799,17 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "exemplar": true,
-          "expr": "max_over_time(max by (resource,container)(res_model_regression_n{resource=~\"$resource\",container=~\"$container\"})[$__range:])",
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "max by (resource,container)(res_model_regression_n{resource=~\"$resource\",container=~\"$container\"})",
+          "instant": true,
           "interval": "",
           "legendFormat": "{{container}}",
+          "range": false,
           "refId": "A"
         }
       ],
-      "title": "N $resource",
+      "title": "N",
       "type": "stat"
     },
     {
@@ -748,9 +850,9 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 12,
+        "w": 6,
         "x": 0,
-        "y": 12
+        "y": 13
       },
       "id": 23,
       "options": {
@@ -785,7 +887,7 @@
           "refId": "A"
         }
       ],
-      "title": "formula $resource",
+      "title": "formula",
       "type": "stat"
     },
     {
@@ -794,11 +896,11 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 14
+        "y": 15
       },
-      "id": 12,
+      "id": 126,
       "panels": [],
-      "title": "Real Usage vs Prediction",
+      "title": "Observed Usage vs Prediction",
       "type": "row"
     },
     {
@@ -810,20 +912,20 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "",
+      "description": "To compare how the prediction is fitting the usage.\nPredicted is calculated by the resource exporter (based on BSF regression from the time being).\nBSF (Best So Far) Prediction is calculated using the BSF formula across past data.",
       "fieldConfig": {
         "defaults": {
-          "unit": "m cores"
+          "unit": "short"
         },
         "overrides": []
       },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
-        "h": 6,
-        "w": 24,
+        "h": 7,
+        "w": 6,
         "x": 0,
-        "y": 15
+        "y": 16
       },
       "hiddenSeries": false,
       "id": 2,
@@ -849,7 +951,7 @@
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
-      "repeat": "container",
+      "repeat": "resource",
       "repeatDirection": "h",
       "seriesOverrides": [],
       "spaceLength": 10,
@@ -863,24 +965,10 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "1000*sum (rate (container_cpu_usage_seconds_total{container=~\"$container\"}[$interval]))",
+          "expr": "max by (unit)(res_model_prediction_usage{container=~\"$container\",resource=~\"$resource\"})",
           "hide": false,
           "interval": "",
-          "legendFormat": "Usage",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "max(res_model_prediction_usage{container=~\"$container\",resource=\"cpu\", unit=\"m\"})",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Predicted",
+          "legendFormat": "Predicted  ({{unit}})",
           "range": true,
           "refId": "A"
         },
@@ -891,112 +979,12 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "max(res_model_regression_coeff{coeff_name=\"offset\", container=~\"$container\", resource=\"cpu\"}) + max(res_model_regression_coeff{coeff_name=\"predictor_0\",container=~\"$container\",resource=\"cpu\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_0\",container=~\"$container\",resource=\"cpu\"}) + (max(res_model_regression_coeff{coeff_name=\"predictor_1\",container=~\"$container\",resource=\"cpu\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_1\",container=~\"$container\",resource=\"cpu\"}) OR vector(0)) + (max(res_model_regression_coeff{coeff_name=\"predictor_2\",container=~\"$container\",resource=\"cpu\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_2\",container=~\"$container\",resource=\"cpu\"}) OR vector(0))+ (max(res_model_regression_coeff{coeff_name=\"predictor_3\",container=~\"$container\",resource=\"cpu\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_3\",container=~\"$container\",resource=\"cpu\"}) OR vector(0))",
+          "expr": "max(res_model_regression_coeff{coeff_name=\"offset\", container=~\"$container\", resource=~\"$resource\"})\r\n + max(res_model_regression_coeff{coeff_name=\"predictor_0\",coeff_degree=\"1\",container=~\"$container\",resource=~\"$resource\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_0\",container=~\"$container\",resource=~\"$resource\"}) + (max(res_model_regression_coeff{coeff_name=\"predictor_1\",coeff_degree=\"1\",container=~\"$container\",resource=~\"$resource\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_1\",container=~\"$container\",resource=~\"$resource\"}) OR vector(0)) + (max(res_model_regression_coeff{coeff_name=\"predictor_2\",coeff_degree=\"1\",container=~\"$container\",resource=~\"$resource\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_2\",container=~\"$container\",resource=~\"$resource\"}) OR vector(0))+ (max(res_model_regression_coeff{coeff_name=\"predictor_3\",coeff_degree=\"1\",container=~\"$container\",resource=~\"$resource\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_3\",container=~\"$container\",resource=~\"$resource\"}) OR vector(0))\r\n  + max(res_model_regression_coeff{coeff_name=\"predictor_0\",coeff_degree=\"2\",container=~\"$container\",resource=~\"$resource\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_0\",container=~\"$container\",resource=~\"$resource\"})^2 + (max(res_model_regression_coeff{coeff_name=\"predictor_1\",coeff_degree=\"2\",container=~\"$container\",resource=~\"$resource\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_1\",container=~\"$container\",resource=~\"$resource\"})^2 OR vector(0)) + (max(res_model_regression_coeff{coeff_name=\"predictor_2\",coeff_degree=\"2\",container=~\"$container\",resource=~\"$resource\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_2\",container=~\"$container\",resource=~\"$resource\"})^2 OR vector(0))+ (max(res_model_regression_coeff{coeff_name=\"predictor_3\",coeff_degree=\"2\",container=~\"$container\",resource=~\"$resource\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_3\",container=~\"$container\",resource=~\"$resource\"})^2 OR vector(0))\r\n    + max(res_model_regression_coeff{coeff_name=\"predictor_0\",coeff_degree=\"3\",container=~\"$container\",resource=~\"$resource\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_0\",container=~\"$container\",resource=~\"$resource\"})^3 + (max(res_model_regression_coeff{coeff_name=\"predictor_1\",coeff_degree=\"3\",container=~\"$container\",resource=~\"$resource\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_1\",container=~\"$container\",resource=~\"$resource\"})^3 OR vector(0)) + (max(res_model_regression_coeff{coeff_name=\"predictor_2\",coeff_degree=\"3\",container=~\"$container\",resource=~\"$resource\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_2\",container=~\"$container\",resource=~\"$resource\"})^3 OR vector(0))+ (max(res_model_regression_coeff{coeff_name=\"predictor_3\",coeff_degree=\"3\",container=~\"$container\",resource=~\"$resource\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_3\",container=~\"$container\",resource=~\"$resource\"})^3 OR vector(0))\r\n    + max(res_model_regression_coeff{coeff_name=\"predictor_0\",coeff_degree=\"4\",container=~\"$container\",resource=~\"$resource\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_0\",container=~\"$container\",resource=~\"$resource\"})^4 + (max(res_model_regression_coeff{coeff_name=\"predictor_1\",coeff_degree=\"4\",container=~\"$container\",resource=~\"$resource\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_1\",container=~\"$container\",resource=~\"$resource\"})^4 OR vector(0)) + (max(res_model_regression_coeff{coeff_name=\"predictor_2\",coeff_degree=\"4\",container=~\"$container\",resource=~\"$resource\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_2\",container=~\"$container\",resource=~\"$resource\"})^4 OR vector(0))+ (max(res_model_regression_coeff{coeff_name=\"predictor_3\",coeff_degree=\"4\",container=~\"$container\",resource=~\"$resource\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_3\",container=~\"$container\",resource=~\"$resource\"})^4 OR vector(0))",
           "hide": false,
           "interval": "",
-          "legendFormat": "Adhoc Prediction",
+          "legendFormat": "BSF Prediction",
           "range": true,
           "refId": "C"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "CPU",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "m cores",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "mbytes"
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 21
-      },
-      "hiddenSeries": false,
-      "id": 8,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "9.3.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "repeat": "container",
-      "repeatDirection": "h",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum (container_memory_working_set_bytes{container=~\"$container\"})/(1024*1024)",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Usage",
-          "range": true,
-          "refId": "B"
         },
         {
           "datasource": {
@@ -1005,200 +993,17 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "max(res_model_prediction_usage{container=~\"$container\",resource=\"mem\", unit=\"Mi\"})",
+          "expr": "max by (unit)(res_model_observed_usage{container=~\"$container\",resource=~\"$resource\"})",
           "hide": false,
           "interval": "",
-          "legendFormat": "Predicted",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "max(res_model_regression_coeff{coeff_name=\"offset\", container=~\"$container\", resource=\"mem\"}) + max(res_model_regression_coeff{coeff_name=\"predictor_0\",container=~\"$container\",resource=\"mem\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_0\",container=~\"$container\",resource=\"mem\"}) + (max(res_model_regression_coeff{coeff_name=\"predictor_1\",container=~\"$container\",resource=\"mem\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_1\",container=~\"$container\",resource=\"mem\"}) OR vector(0)) + (max(res_model_regression_coeff{coeff_name=\"predictor_2\",container=~\"$container\",resource=\"mem\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_2\",container=~\"$container\",resource=\"mem\"}) OR vector(0))+ (max(res_model_regression_coeff{coeff_name=\"predictor_3\",container=~\"$container\",resource=\"mem\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_3\",container=~\"$container\",resource=\"mem\"}) OR vector(0))",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Adhoc Prediction",
-          "range": true,
-          "refId": "C"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Mem",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "mbytes",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "KBs"
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 27
-      },
-      "hiddenSeries": false,
-      "id": 94,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "9.3.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "repeatDirection": "h",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum (rate (container_network_receive_bytes_total{container=~\"$container\"}[$interval]))/1000",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Usage In",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum (rate (container_network_transmit_bytes_total{container=~\"$container\"}[$interval]))/1000",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Usage Out",
+          "legendFormat": "Usage ({{unit}})",
           "range": true,
           "refId": "D"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "max(res_model_prediction_usage{container=~\"$container\",resource=\"network_in\", unit=\"KB/s\"})",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Predicted Received",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "max(res_model_prediction_usage{container=~\"$container\",resource=\"network_out\", unit=\"KB/s\"})",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Predicted Sent",
-          "range": true,
-          "refId": "E"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "max(res_model_regression_coeff{coeff_name=\"offset\", container=~\"$container\", resource=\"network_in\"}) + max(res_model_regression_coeff{coeff_name=\"predictor_0\",container=~\"$container\",resource=\"network_in\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_0\",container=~\"$container\",resource=\"network_in\"}) + (max(res_model_regression_coeff{coeff_name=\"predictor_1\",container=~\"$container\",resource=\"network_in\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_1\",container=~\"$container\",resource=\"network_in\"}) OR vector(0)) + (max(res_model_regression_coeff{coeff_name=\"predictor_2\",container=~\"$container\",resource=\"network_in\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_2\",container=~\"$container\",resource=\"network_in\"}) OR vector(0))+ (max(res_model_regression_coeff{coeff_name=\"predictor_3\",container=~\"$container\",resource=\"network_in\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_3\",container=~\"$container\",resource=\"network_in\"}) OR vector(0))",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Adhoc Prediction Received",
-          "range": true,
-          "refId": "F"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "max(res_model_regression_coeff{coeff_name=\"offset\", container=~\"$container\", resource=\"network_out\"}) + max(res_model_regression_coeff{coeff_name=\"predictor_0\",container=~\"$container\",resource=\"network_out\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_0\",container=~\"$container\",resource=\"network_out\"}) + (max(res_model_regression_coeff{coeff_name=\"predictor_1\",container=~\"$container\",resource=\"network_out\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_1\",container=~\"$container\",resource=\"network_out\"}) OR vector(0)) + (max(res_model_regression_coeff{coeff_name=\"predictor_2\",container=~\"$container\",resource=\"network_out\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_2\",container=~\"$container\",resource=\"network_out\"}) OR vector(0))+ (max(res_model_regression_coeff{coeff_name=\"predictor_3\",container=~\"$container\",resource=\"network_out\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_3\",container=~\"$container\",resource=\"network_out\"}) OR vector(0))",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Adhoc Prediction Sent",
-          "range": true,
-          "refId": "C"
         }
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "Network I/O",
+      "title": "$resource",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1211,473 +1016,8 @@
         "values": []
       },
       "yaxes": [
-        {
-          "format": "KBs",
-          "logBase": 1,
-          "show": true
-        },
         {
           "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "mbytes"
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 33
-      },
-      "hiddenSeries": false,
-      "id": 97,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "9.3.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "repeatDirection": "h",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum(container_fs_usage_bytes{id=\"/\"} + on (device) group_right() container_fs_usage_bytes{container=~\"$container\"}*0)/(1024*1024)",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Usage",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "max(res_model_prediction_usage{container=~\"$container\",resource=\"storage_usage\", unit=\"MiB\"})",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Predicted",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "max(res_model_regression_coeff{coeff_name=\"offset\", container=~\"$container\", resource=\"storage_usage\"}) + max(res_model_regression_coeff{coeff_name=\"predictor_0\",container=~\"$container\",resource=\"storage_usage\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_0\",container=~\"$container\",resource=\"storage_usage\"}) + (max(res_model_regression_coeff{coeff_name=\"predictor_1\",container=~\"$container\",resource=\"storage_usage\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_1\",container=~\"$container\",resource=\"storage_usage\"}) OR vector(0)) + (max(res_model_regression_coeff{coeff_name=\"predictor_2\",container=~\"$container\",resource=\"storage_usage\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_2\",container=~\"$container\",resource=\"storage_usage\"}) OR vector(0))+ (max(res_model_regression_coeff{coeff_name=\"predictor_3\",container=~\"$container\",resource=\"storage_usage\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_3\",container=~\"$container\",resource=\"storage_usage\"}) OR vector(0))",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Adhoc Prediction",
-          "range": true,
-          "refId": "F"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Storage Usage",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "mbytes",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "KBs"
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 39
-      },
-      "hiddenSeries": false,
-      "id": 96,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "9.3.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "repeatDirection": "h",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum (rate (container_fs_reads_bytes_total{container=~\"$container\"}[$interval]))/(1000*1000)",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Usage R",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum (rate (container_fs_writes_bytes_total{container=~\"$container\"}[$interval]))/(1000*1000)",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Usage W",
-          "range": true,
-          "refId": "D"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "max(res_model_prediction_usage{container=~\"$container\",resource=\"storage_thr_R\", unit=\"MB/s\"})",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Predicted R",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "max(res_model_prediction_usage{container=~\"$container\",resource=\"storage_thr_W\", unit=\"MB/s\"})",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Predicted W",
-          "range": true,
-          "refId": "E"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "max(res_model_regression_coeff{coeff_name=\"offset\", container=~\"$container\", resource=\"storage_thr_R\"}) + max(res_model_regression_coeff{coeff_name=\"predictor_0\",container=~\"$container\",resource=\"storage_thr_R\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_0\",container=~\"$container\",resource=\"storage_thr_R\"}) + (max(res_model_regression_coeff{coeff_name=\"predictor_1\",container=~\"$container\",resource=\"storage_thr_R\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_1\",container=~\"$container\",resource=\"storage_thr_R\"}) OR vector(0)) + (max(res_model_regression_coeff{coeff_name=\"predictor_2\",container=~\"$container\",resource=\"storage_thr_R\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_2\",container=~\"$container\",resource=\"storage_thr_R\"}) OR vector(0))+ (max(res_model_regression_coeff{coeff_name=\"predictor_3\",container=~\"$container\",resource=\"storage_thr_R\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_3\",container=~\"$container\",resource=\"storage_thr_R\"}) OR vector(0))",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Adhoc Prediction R",
-          "range": true,
-          "refId": "F"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "max(res_model_regression_coeff{coeff_name=\"offset\", container=~\"$container\", resource=\"storage_thr_W\"}) + max(res_model_regression_coeff{coeff_name=\"predictor_0\",container=~\"$container\",resource=\"storage_thr_W\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_0\",container=~\"$container\",resource=\"storage_thr_W\"}) + (max(res_model_regression_coeff{coeff_name=\"predictor_1\",container=~\"$container\",resource=\"storage_thr_W\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_1\",container=~\"$container\",resource=\"storage_thr_W\"}) OR vector(0)) + (max(res_model_regression_coeff{coeff_name=\"predictor_2\",container=~\"$container\",resource=\"storage_thr_W\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_2\",container=~\"$container\",resource=\"storage_thr_W\"}) OR vector(0))+ (max(res_model_regression_coeff{coeff_name=\"predictor_3\",container=~\"$container\",resource=\"storage_thr_W\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_3\",container=~\"$container\",resource=\"storage_thr_W\"}) OR vector(0))",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Adhoc Prediction W",
-          "range": true,
-          "refId": "C"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Storage Throughput",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "KBs",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "iops"
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 45
-      },
-      "hiddenSeries": false,
-      "id": 98,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "9.3.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "repeatDirection": "h",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "irate(container_fs_reads_total{id=\"/\"}[$interval]) + on (device) group_right() container_fs_reads_total{container=~\"$container\"}*0",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Usage R",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "irate(container_fs_writes_total{id=\"/\"}[$interval]) + on (device) group_right() container_fs_writes_total{container=~\"$container\"}*0",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Usage W",
-          "range": true,
-          "refId": "D"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "max(res_model_prediction_usage{container=~\"$container\",resource=\"storage_iops_R\", unit=\"IOPS\"})",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Predicted R",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "max(res_model_prediction_usage{container=~\"$container\",resource=\"storage_iops_W\", unit=\"IOPS\"})",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Predicted W",
-          "range": true,
-          "refId": "E"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "max(res_model_regression_coeff{coeff_name=\"offset\", container=~\"$container\", resource=\"storage_iops_R\"}) + max(res_model_regression_coeff{coeff_name=\"predictor_0\",container=~\"$container\",resource=\"storage_iops_R\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_0\",container=~\"$container\",resource=\"storage_iops_R\"}) + (max(res_model_regression_coeff{coeff_name=\"predictor_1\",container=~\"$container\",resource=\"storage_iops_R\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_1\",container=~\"$container\",resource=\"storage_iops_R\"}) OR vector(0)) + (max(res_model_regression_coeff{coeff_name=\"predictor_2\",container=~\"$container\",resource=\"storage_iops_R\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_2\",container=~\"$container\",resource=\"storage_iops_R\"}) OR vector(0))+ (max(res_model_regression_coeff{coeff_name=\"predictor_3\",container=~\"$container\",resource=\"storage_iops_R\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_3\",container=~\"$container\",resource=\"storage_iops_R\"}) OR vector(0))",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Adhoc Prediction R",
-          "range": true,
-          "refId": "F"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "max(res_model_regression_coeff{coeff_name=\"offset\", container=~\"$container\", resource=\"storage_iops_W\"}) + max(res_model_regression_coeff{coeff_name=\"predictor_0\",container=~\"$container\",resource=\"storage_iops_W\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_0\",container=~\"$container\",resource=\"storage_iops_W\"}) + (max(res_model_regression_coeff{coeff_name=\"predictor_1\",container=~\"$container\",resource=\"storage_iops_W\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_1\",container=~\"$container\",resource=\"storage_iops_W\"}) OR vector(0)) + (max(res_model_regression_coeff{coeff_name=\"predictor_2\",container=~\"$container\",resource=\"storage_iops_W\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_2\",container=~\"$container\",resource=\"storage_iops_W\"}) OR vector(0))+ (max(res_model_regression_coeff{coeff_name=\"predictor_3\",container=~\"$container\",resource=\"storage_iops_W\"}) * max(res_model_predictor_usage{coeff_name=\"predictor_3\",container=~\"$container\",resource=\"storage_iops_W\"}) OR vector(0))",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Adhoc Prediction W",
-          "range": true,
-          "refId": "C"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Storage IOPS",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "iops",
           "logBase": 1,
           "show": true
         },
@@ -1697,11 +1037,11 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 51
+        "y": 23
       },
       "id": 19,
       "panels": [],
-      "title": "Predictors",
+      "title": "Predictor Usage",
       "type": "row"
     },
     {
@@ -1724,9 +1064,9 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 6,
-        "w": 24,
+        "w": 6,
         "x": 0,
-        "y": 52
+        "y": 24
       },
       "hiddenSeries": false,
       "id": 16,
@@ -1754,7 +1094,7 @@
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
-      "repeat": "container",
+      "repeat": "resource",
       "repeatDirection": "h",
       "seriesOverrides": [],
       "spaceLength": 10,
@@ -1768,7 +1108,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "res_model_predictor_usage{container=~\"$container\",resource=\"cpu\"}",
+          "expr": "max by(coeff_name,coeff_alias)(res_model_predictor_usage{container=~\"$container\",resource=~\"$resource\"})",
           "hide": false,
           "interval": "",
           "legendFormat": "{{coeff_name}} : {{coeff_alias}}",
@@ -1778,7 +1118,7 @@
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "Predictor CPU",
+      "title": "Predictor $resource",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1805,1514 +1145,6 @@
       "yaxis": {
         "align": false
       }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 58
-      },
-      "hiddenSeries": false,
-      "id": 17,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "max",
-        "sortDesc": false,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "9.3.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "repeat": "container",
-      "repeatDirection": "h",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "res_model_predictor_usage{container=~\"$container\",resource=\"mem\"}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "{{coeff_name}} : {{coeff_alias}}",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Predictor Mem",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 64
-      },
-      "hiddenSeries": false,
-      "id": 95,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "max",
-        "sortDesc": false,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "9.3.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "repeatDirection": "h",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "res_model_predictor_usage{container=~\"$container\",resource=\"network_io_Received\"}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Received : {{coeff_name}} : {{coeff_alias}}",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "res_model_predictor_usage{container=~\"$container\",resource=\"network_io_Sent\"}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Sent : {{coeff_name}} : {{coeff_alias}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Predictor Network I/O",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 70
-      },
-      "hiddenSeries": false,
-      "id": 99,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "max",
-        "sortDesc": false,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "9.3.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "repeatDirection": "h",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "res_model_predictor_usage{container=~\"$container\",resource=\"storage_usage\"}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "{{coeff_name}} : {{coeff_alias}}",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Predictor Storage Usage",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 76
-      },
-      "hiddenSeries": false,
-      "id": 100,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "max",
-        "sortDesc": false,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "9.3.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "repeatDirection": "h",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "res_model_predictor_usage{container=~\"$container\",resource=\"storage_thr_R\"}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "R : {{coeff_name}} : {{coeff_alias}}",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "res_model_predictor_usage{container=~\"$container\",resource=\"storage_thr_W\"}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "W : {{coeff_name}} : {{coeff_alias}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Predictor Storage Throughput",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 82
-      },
-      "hiddenSeries": false,
-      "id": 101,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "max",
-        "sortDesc": false,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "9.3.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "repeatDirection": "h",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "res_model_predictor_usage{container=~\"$container\",resource=\"storage_iops_R\"}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "R : {{coeff_name}} : {{coeff_alias}}",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "res_model_predictor_usage{container=~\"$container\",resource=\"storage_iops_W\"}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "W : {{coeff_name}} : {{coeff_alias}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Predictor Storage IOPS",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 88
-      },
-      "id": 14,
-      "panels": [],
-      "title": "Correlation TO REMOVE",
-      "type": "row"
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 89
-      },
-      "hiddenSeries": false,
-      "id": 15,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "max",
-        "sortDesc": false,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "9.3.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum(res_control_measurement_pixels)",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "pixels",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum(go_goroutines{job=\"resource-control-sample\"})",
-          "hide": true,
-          "interval": "",
-          "legendFormat": "go_routines",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Control Sample Predictor",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "m cores"
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 95
-      },
-      "hiddenSeries": false,
-      "id": 7,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "max",
-        "sortDesc": false,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "9.3.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "1000*sum (rate (container_cpu_usage_seconds_total{container=\"resource-control-sample\"}[$interval]))",
-          "interval": "",
-          "legendFormat": "usage",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "1.2281 + 9.6602 * sum(res_control_measurement_pixels)/1000000",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Pred 1 72% R² (30m)",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "0.5532 + 9.3840 * sum(res_control_measurement_pixels)/1000000",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Pred 1 99% R² (5m)",
-          "range": true,
-          "refId": "D"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "0.1 + 10.3 * sum(res_control_measurement_pixels)/1000000",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Pred 1 IDEAL",
-          "range": true,
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "0.6385 + 8.7699 * sum(res_control_measurement_pixels)/1000000",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Pred 1 72% R² (60m)",
-          "range": true,
-          "refId": "E"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Control Sample CPU best",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "m cores",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "mbytes"
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 101
-      },
-      "hiddenSeries": false,
-      "id": 33,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "max",
-        "sortDesc": false,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "9.3.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum (container_memory_working_set_bytes{container=\"resource-control-sample\"})/(1024*1024)",
-          "interval": "",
-          "legendFormat": "usage",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "96.6756 + 4.2282* sum(res_control_measurement_pixels)/1000000",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Pred 1 13% R² (30m)",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "32.2440 + 4.5362* sum(res_control_measurement_pixels)/1000000",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Pred 1 99.7% R² (5m)",
-          "range": true,
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "40 + 8.6 * sum(res_control_measurement_pixels)/1000000",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Pred 1 IDEAL",
-          "range": true,
-          "refId": "D"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "99.8197 + 4.3463* sum(res_control_measurement_pixels)/1000000",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Pred 1 12% R² (60m)",
-          "range": true,
-          "refId": "E"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Control Sample Mem best",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "mbytes",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "iops"
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 107
-      },
-      "hiddenSeries": false,
-      "id": 55,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "max",
-        "sortDesc": false,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "9.3.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "irate(container_fs_reads_total{id=\"/\"}[$interval]) + on (device) group_right() container_fs_reads_total{container=\"resource-control-sample\"}*0",
-          "interval": "",
-          "legendFormat": "usage R",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "irate(container_fs_writes_total{id=\"/\"}[$interval]) + on (device) group_right() container_fs_writes_total{container=\"resource-control-sample\"}*0",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "usage W",
-          "range": true,
-          "refId": "G"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "8.52 + 0.000032* sum(res_control_measurement_pixels)",
-          "hide": true,
-          "interval": "",
-          "legendFormat": "Predicted 91% R²",
-          "range": true,
-          "refId": "E"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "37.8 + 0.000012* sum(res_control_measurement_pixels)",
-          "hide": true,
-          "interval": "",
-          "legendFormat": "Predicted 99% R²",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "12.08 + 0.00000867* sum(res_control_measurement_pixels)",
-          "hide": true,
-          "interval": "",
-          "legendFormat": "Predicted 99.7% R²",
-          "range": true,
-          "refId": "C"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Control Sample Storage IOPS best",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "iops",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bytes"
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 113
-      },
-      "hiddenSeries": false,
-      "id": 60,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "max",
-        "sortDesc": false,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "9.3.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "rate(node_disk_read_bytes_total{device=\"sdb\"}[$interval])",
-          "interval": "",
-          "legendFormat": "usage R",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "rate(node_disk_written_bytes_total{device=\"sdb\"}[$interval])",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "usage W",
-          "range": true,
-          "refId": "G"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Control Sample Storage Through best",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "bytes",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bytes"
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 119
-      },
-      "hiddenSeries": false,
-      "id": 65,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sort": "max",
-        "sortDesc": false,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "9.3.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum(container_fs_usage_bytes{container=\"resource-control-sample\"})",
-          "interval": "",
-          "legendFormat": "usage cont",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum(container_fs_usage_bytes{device=\"/dev/sdb\", id=\"/\"})",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "usage cont /",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum(node_filesystem_size_bytes{device=\"/dev/sdb\",mountpoint=\"/\"}) - sum(node_filesystem_avail_bytes{device=\"/dev/sdb\",mountpoint=\"/\"})",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "usage node",
-          "range": true,
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum(node_filesystem_size_bytes{device=\"/dev/sdb\",mountpoint=\"/\"}) - sum(node_filesystem_avail_bytes{device=\"/dev/sdb\",mountpoint=\"/\"}) - 35500000000",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "usage node corect",
-          "range": true,
-          "refId": "D"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Control Sample Storage Usage best",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "bytes",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "binBps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 125
-      },
-      "id": 70,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "9.3.2",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum(rate(container_network_receive_bytes_total{container=\"resource-control-sample\"}[$interval]))",
-          "interval": "",
-          "legendFormat": "usage received",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "sum(rate(container_network_transmit_bytes_total{container=\"resource-control-sample\"}[$interval]))",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "usage sent",
-          "range": true,
-          "refId": "G"
-        }
-      ],
-      "title": "Control Sample Network Bandwidth best",
-      "type": "timeseries"
     }
   ],
   "refresh": false,
@@ -3344,7 +1176,7 @@
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
-        "sort": 0,
+        "sort": 1,
         "tagValuesQuery": "",
         "tagsQuery": "",
         "type": "query",
@@ -3377,7 +1209,7 @@
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
-        "sort": 0,
+        "sort": 1,
         "tagValuesQuery": "",
         "tagsQuery": "",
         "type": "query",
@@ -3420,13 +1252,13 @@
     ]
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-30m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Resource Model Exporter",
   "uid": "xFL9y8hVke",
-  "version": 2,
+  "version": 3,
   "weekStart": ""
 }
