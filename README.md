@@ -86,7 +86,7 @@ That is supposed to be generic for any container orchestrator based on kubernete
 
 - ENV files
 ```
-PROM_ENDPOINT=http://prometheus:9090
+PROMETHEUS_ENDPOINT=http://prometheus:9090
 PROMETHEUS_AUTH_USER=admin
 PROMETHEUS_AUTH_PWD=admin
 REGRESSION_MAX_ROI=7d
