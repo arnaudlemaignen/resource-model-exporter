@@ -13,7 +13,7 @@ services:
     volumes:
       - ./compose/resource_model_exporter/:/resources/
     environment:
-      - PROM_ENDPOINT=localhost:9090
+      - PROMETHEUS_ENDPOINT=localhost:9090
       - REGRESSION_MIN_ROI=5m
       - REGRESSION_MAX_ROI=5m
       - SAMPLING_INTERVAL=15s
