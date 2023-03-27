@@ -42,7 +42,7 @@ func Init() *collector.Exporter {
 		log.Info(".env file absent, assume env variables are set.")
 	}
 
-	promEndpoint := os.Getenv("PROM_ENDPOINT")
+	promEndpoint := os.Getenv("PROMETHEUS_ENDPOINT")
 	promUser := os.Getenv("PROMETHEUS_AUTH_USER")
 	promPwd := os.Getenv("PROMETHEUS_AUTH_PWD")
 	promLogin := ""
