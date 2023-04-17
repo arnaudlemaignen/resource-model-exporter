@@ -2,14 +2,19 @@ package main
 
 import (
 	"flag"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"resource-model-exporter/pkg/collector"
 	"resource-model-exporter/pkg/types"
+	"resource-model-exporter/pkg/utils"
 	"syscall"
+	timestd "time"
 
 	"github.com/joho/godotenv"
+	"github.com/robfig/cron/v3"
 
 	time "github.com/hyperjumptech/jiffy"
 	"github.com/prometheus/client_golang/prometheus"
@@ -19,27 +24,32 @@ import (
 
 var (
 	version          = "v0.01"
+	debug            = flag.Bool("debug", false, "Debug mode default false")
+	email            = flag.Bool("email", true, "Send Mails mode default true")
 	listenAddress    = flag.String("web.listen-address", ":9901", "Address to listen on for telemetry")
 	metricsPath      = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics")
-	outputDir        = "output/"
-	resYmlPredictors = "resources/predictors.yml"
-	resYmlObserved   = "resources/observed.yml"
-	resYmlInfo       = "resources/info.yml"
-	resYmlLimit      = "resources/limits.yml"
-	outYmlReg        = outputDir + "regressions.yml"
+	outputDir        = utils.OUT_PATH
+	logDir           = utils.LOG_PATH
+	resDir           = utils.RES_PATH
+	resYmlPredictors = resDir + "/predictors.yml"
+	resYmlObserved   = resDir + "/observed.yml"
+	resYmlInfo       = resDir + "/info.yml"
+	resYmlLimit      = resDir + "/limits.yml"
+	outYmlReg        = outputDir + "/regressions.yml"
 )
 
-//Readiness message
+// Readiness message
 func Ready() string {
 	return "Resource Model Exporter is ready"
 }
 
 func Init() *collector.Exporter {
 	flag.Parse()
+	manageLogger()
 
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Info(".env file absent, assume env variables are set.")
+		log.Warn(".env file absent, assume env variables are set.")
 	}
 
 	promEndpoint := os.Getenv("PROMETHEUS_ENDPOINT")
@@ -91,6 +101,24 @@ func Init() *collector.Exporter {
 	return exporter
 }
 
+func manageLogger() {
+	log.SetOutput(os.Stdout)
+
+	//activate debug mode otherwise Info as log level
+	if *debug {
+		log.SetLevel(log.DebugLevel)
+	}
+
+	os.MkdirAll(logDir, os.ModePerm)
+	logFile := filepath.Join(logDir, timestd.Now().Format("200701121604")+"_ResourceModelExporter.log")
+	f, err := os.OpenFile(logFile, os.O_WRONLY|os.O_CREATE, 0755)
+	if err != nil {
+		log.Warn("Issue with log file ", logFile)
+	}
+	mw := io.MultiWriter(os.Stdout, f)
+	log.SetOutput(mw)
+}
+
 func main() {
 	log.Info("Starting resource model exporter")
 	exporter := Init()
@@ -108,6 +136,11 @@ func main() {
              </html>`))
 	})
 
+	// Launch a cron that will send an email once a day at midnight
+	c := cron.New()
+	c.AddFunc("@daily", func() { sendEmails(*email) })
+	c.Start()
+
 	//To catch SIGHUP signal for reloading conf
 	//https://rossedman.io/blog/computers/hot-reload-sighup-with-go/
 	sigs := make(chan os.Signal, 1)
@@ -116,11 +149,11 @@ func main() {
 	go func() {
 		log.Info("Listening on port " + *listenAddress)
 		log.Fatal(http.ListenAndServe(*listenAddress, nil))
+		c.Stop()
 	}()
 
 	for range sigs {
 		log.Warn("HOT RELOAD")
 		exporter.ReloadYamlConfig()
 	}
-
 }

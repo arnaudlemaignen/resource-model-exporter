@@ -1,0 +1,17 @@
+[36mINFO[0m[0000] PROMETHEUS_AUTH_USER and or PROMETHEUS_AUTH_PWD were not set, will not use basic auth. 
+[36mINFO[0m[0000] prometheus URL         => http://            
+[36mINFO[0m[0000] Max Region Of Interest => 60m                
+[36mINFO[0m[0000] Sampling Interval      => 30s                
+[36mINFO[0m[0000] Successfully Opened resources/predictors.yml 
+[36mINFO[0m[0000] Successfully Opened resources/observed.yml   
+[36mINFO[0m[0000] Successfully Opened resources/info.yml       
+[36mINFO[0m[0000] Successfully Opened resources/limits.yml     
+[36mINFO[0m[0000] out/regressions.yml is empty or not well formated 
+[36mINFO[0m[0000] Listening on port :9901                      
+[33mWARN[0m[0038] HOT RELOAD                                   
+[36mINFO[0m[0038] Successfully Opened resources/predictors.yml 
+[36mINFO[0m[0038] Successfully Opened resources/observed.yml   
+[36mINFO[0m[0038] Successfully Opened resources/info.yml       
+[36mINFO[0m[0038] Successfully Opened resources/limits.yml     
+[36mINFO[0m[0038] out/regressions.yml is empty or not well formated 
+[36mINFO[0m[0038] Yaml Config Reloaded                         

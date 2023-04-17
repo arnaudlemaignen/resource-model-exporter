@@ -91,6 +91,11 @@ PROMETHEUS_AUTH_USER=admin
 PROMETHEUS_AUTH_PWD=admin
 REGRESSION_MAX_ROI=7d
 SAMPLING_INTERVAL=5m
+MAIL_ORIGINATOR=originator@mycompany.com
+MAIL_TO_AGGR=recipient@mycompany.com
+MAIL_SMTP_PORT=25
+MAIL_SMTP_USER=admin
+MAIL_SMTP_PWD=admin
 ```
 
 It is currently support up to 4 predictors and 4 polynomial degrees (quartic).
@@ -113,6 +118,12 @@ INFO[0144] Successfully Opened resources/info.yml
 INFO[0144] Successfully Opened resources/limits.yml
 INFO[0144] Successfully Opened output/regressions.yml
 INFO[0144] Yaml Config Reloaded
+
+## Email
+
+By default an email will be sent with all yaml files once a day (at midnight).
+These could be use for off line analysis or for aggregations of the results.
+You can disable that feature with flag --email=false
 
 ## Install
 

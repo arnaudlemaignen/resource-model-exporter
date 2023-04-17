@@ -91,3 +91,4 @@ services:
       - ./compose/grafana/config.monitoring
     restart: always
     network_mode: "host"
+
