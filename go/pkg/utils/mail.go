@@ -30,8 +30,8 @@ func Send() bool {
 	subj := time.Now().Format("20060102") + "_" + GetStringEnv("ROUTE_SUBDOMAIN", "domain") + "_" + GetStringEnv("NAMESPACE", "ns") + "_ResourceModelExporter"
 	body := "This mail should contains 5 yaml files to be extracted"
 	toAttach := []FilesToAttach{
-		{Dir: RES_PATH, Ext: ".yaml"},
-		{Dir: OUT_PATH, Ext: ".yaml"},
+		{Dir: RES_PATH, Ext: ".yml"},
+		{Dir: OUT_PATH, Ext: ".yml"},
 		{Dir: LOG_PATH, Ext: ".log"}}
 
 	m.SetHeader("From", from)
