@@ -5,7 +5,7 @@ go 1.15
 require (
 	github.com/hyperjumptech/jiffy v1.0.0
 	github.com/joho/godotenv v1.3.0
-	github.com/prometheus/client_golang v1.8.0
+	github.com/prometheus/client_golang v1.17.0
 	github.com/prometheus/common v0.14.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/sajari/regression v1.0.1
