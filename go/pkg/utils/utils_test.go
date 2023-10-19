@@ -47,7 +47,7 @@ func TestPromNoConnection_queryRange(t *testing.T) {
 	want2 := "no such host"
 	_, err := Prom_queryRange("http://foo:9090", "up{job=\"prometheus\"}", time.Now().Add(-time.Hour), time.Now(), time.Minute)
 	log.Info(err)
-	if !strings.Contains(err.Error(), want) {
+	if !strings.Contains(err.Error(), want) && !strings.Contains(err.Error(), want2) {
 		t.Errorf("TestPromNoConnection_queryRange() = %q, want %q or %q", err, want, want2)
 	}
 }
@@ -67,7 +67,7 @@ func TestPromNoConnection_series(t *testing.T) {
 	want2 := "no such host"
 	_, err := Prom_series("http://foo:9090", "up{job=\"prometheus\"}", time.Now().Add(-time.Hour), time.Now())
 	log.Info(err)
-	if !strings.Contains(err.Error(), want) {
+	if !strings.Contains(err.Error(), want) && !strings.Contains(err.Error(), want2) {
 		t.Errorf("TestPromNoConnection_series() = %q, want %q or %q", err, want, want2)
 	}
 }
