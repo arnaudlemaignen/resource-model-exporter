@@ -205,13 +205,10 @@ You can build a docker image locally with the following commands:
 
 Today only cpu/mem limits are looked at, storage limits will follow once the feature is added to kubernetes 
 https://github.com/kubernetes/kubernetes/issues/92287
-  <!-- * The source code is periodically indexed: [Prometheus Core](https://godoc.org/github.com/prometheus/prometheus).
-  * You will find a CircleCI configuration in [`.circleci/config.yml`](.circleci/config.yml).
-  * See the [Community page](https://prometheus.io/community) for how to reach the Prometheus developers and users on various communication channels. -->
 
 ## Contributions
 
 Pull requests, comments and suggestions are welcome.
 
-Please see [CONTRIBUTING.md](CONTRIBUTING.md) for more information.d](https://github.com/prometheus/prometheus/blob/main/CONTRIBUTING.md) -->
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for more information
 
