@@ -110,7 +110,7 @@ xy       28027  1.8  0.1 1308792 21188 pts/3   Sl+  11:43   0:00 ./resource_mode
 $ kill -HUP 28027
 
 Then it will reload the yaml config
-
+```
 WARN[0144] HOT RELOAD 
 INFO[0144] Successfully Opened resources/predictors.yml 
 INFO[0144] Successfully Opened resources/observed.yml 
@@ -118,6 +118,7 @@ INFO[0144] Successfully Opened resources/info.yml
 INFO[0144] Successfully Opened resources/limits.yml 
 INFO[0144] Successfully Opened output/regressions.yml 
 INFO[0144] Yaml Config Reloaded 
+```
 
 ## Email
 
