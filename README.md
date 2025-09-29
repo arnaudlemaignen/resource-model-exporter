@@ -11,7 +11,7 @@
 examples and guides. -->
 
 Resource Model Exporter is a Prometheus exporter.
-It collects resource metrics (CPU/Memory usage output) and dimensioning metrics (application usage input) for a container (or application) from an existing Prometheus instance for a given time window, find the relationship between the input and the output, exposes the model as metrics that can be ingested by a Prometheus instance and graphed with Grafana.
+It collects resource metrics (CPU/Memory usage output) and dimensioning metrics (application usage input) for a container (or application) from an existing Prometheus instance for a given time window, find the relationship between the input and the output (via Machine Learning), exposes the model as metrics that can be ingested by a Prometheus instance and graphed with Grafana.
 The Metrics and more information about the measurements are also exported to json files for off-line analysis.
 
 ## Principles
@@ -25,7 +25,7 @@ The running sequence of the resource model exporter for each container/applicati
 - measure the inputs variables/metrics (predictors) such as qty of transactions, qty of object retained in memory/disk
 - measure the outputs variables/metrics (observed) such as CPU/Memory/Storage/IOPS
 - check that there is no bottleneck achieved on CPU/Memory/Storage/IOPS axis (by checking the container limits, ...)
-- run a linear regression (MLR) between the predictors and observed variables for a given load
+- run a linear regression ([MLR](https://en.wikipedia.org/wiki/Linear_regression#Simple_and_multiple_linear_regression)) between the predictors and observed variables for a given load
 - expose the resource model as prometheus metrics and Yaml output
 
 The cherry on the cake is to visualize the delta between the model and the real current usage on a graph
